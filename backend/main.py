@@ -5,8 +5,9 @@ from supabase import create_client, Client
 from pydantic import BaseModel, ValidationError
 import os
 from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, List
 import json
+from math import radians, cos, sin, asin, sqrt
 
 load_dotenv()
 
@@ -28,6 +29,12 @@ class QuizAnswerResponse(BaseModel):
     correct_answer: str
     score: int
     message: str
+
+class NearbySheltersRequest(BaseModel):
+    latitude: float
+    longitude: float
+    max_distance: float = 5  # km（デフォルト5km）
+    limit: int = 10  # 最大10件
 
 app = FastAPI(title="防災チャットボット API")
 
@@ -194,6 +201,58 @@ async def get_user_scores(session_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
 
+# 距離計算（Haversine formula）
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    2点間の距離を計算（単位：km）
+    """
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 6371  # 地球の半径（km）
+    return c * r
+
+# 近くの避難所を検索
+@app.post("/api/shelters/nearby")
+async def get_nearby_shelters(request: NearbySheltersRequest):
+    try:
+        # 全避難所データを取得
+        response = supabase.table("shelters").select("*").execute()
+        shelters = response.data
+
+        if not shelters:
+            return {"data": []}
+
+        # 距離を計算して、リストに追加
+        shelters_with_distance = []
+        for shelter in shelters:
+            distance = calculate_distance(
+                request.latitude,
+                request.longitude,
+                float(shelter["latitude"]),
+                float(shelter["longitude"])
+            )
+
+            # max_distance 以内のみ
+            if distance <= request.max_distance:
+                shelter_copy = shelter.copy()
+                shelter_copy["distance"] = round(distance, 2)
+                shelters_with_distance.append(shelter_copy)
+
+        # 距離でソート（近い順）
+        shelters_with_distance.sort(key=lambda x: x["distance"])
+
+        # limit で制限
+        result = shelters_with_distance[:request.limit]
+
+        return {"data": result, "count": len(result)}
+
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
