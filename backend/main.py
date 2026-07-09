@@ -247,7 +247,12 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
         # limit で制限
         result = shelters_with_distance[:request.limit]
 
-        return {"data": result, "count": len(result)}
+        return {
+            "data": result,
+            "count": len(result),
+            "user_latitude": request.latitude,
+            "user_longitude": request.longitude
+        }
 
     except Exception as e:
         print(f"ERROR: {str(e)}")
