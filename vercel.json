@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd frontend/bousai-chatbot && npm run build",
+  "outputDirectory": "frontend/bousai-chatbot/build",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
