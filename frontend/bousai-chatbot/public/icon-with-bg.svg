@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="153.60001" height="204.8" viewBox="0 0 153.60001 204.8">
+  <!-- 黒い背景 -->
+  <rect width="153.60001" height="204.8" fill="#000000"/>
+  
+  <!-- ユーザーのアイコン要素 -->
+  <defs>
+    <linearGradient id="linearGradient1" inkscape:label="#E088C8" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+      <stop style="stop-color:#e088c8;stop-opacity:1;" offset="0.41104296" id="stop3" />
+      <stop style="stop-color:#4a9fe8;stop-opacity:1;" offset="1" id="stop4" />
+    </linearGradient>
+    <linearGradient inkscape:collect="always" xlink:href="#linearGradient1" id="linearGradient2" x1="0.10525171" y1="98.380592" x2="153.49475" y2="106.4194" gradientUnits="userSpaceOnUse" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+  </defs>
+  
+  <!-- グラデーション吹き出し（ユーザーが Inkscape で作成） -->
+  <!-- 原点は (0,0) から始まり、width="153.60001" height="204.8" の範囲 -->
+  <g>
+    <!-- ここにユーザーのアイコン要素が入ります -->
+    <!-- グラデーション吹き出しと人のシルエット -->
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+{
+  "short_name": "防災Con",
+  "name": "防災コンシェルジュ",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#E088C8",
+  "background_color": "#0a0e1a",
+  "orientation": "portrait-primary",
+  "scope": "/"
+}
