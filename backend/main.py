@@ -154,11 +154,11 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
         print(f"TRACEBACK: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
 
-# 警察便利技取得
+# 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_police_tips(category: str = None):
+async def get_bousai_lab(category: str = None):
     try:
-        query = supabase.table("police_tips").select("*")
+        query = supabase.table("bousai_lab").select("*")
         if category:
             query = query.eq("category", category)
         data = query.execute()
@@ -231,8 +231,8 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             distance = calculate_distance(
                 request.latitude,
                 request.longitude,
-                float(shelter["latitude"]),
-                float(shelter["longitude"])
+                float(shelter["緯度"]),
+                float(shelter["経度"])
             )
 
             # max_distance 以内のみ
