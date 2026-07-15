@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bousai-chatbot",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "C:\\Users\\kms20\\OneDrive\\デスクトップ\\防災チャットボット\\frontend\\bousai-chatbot",
+      "port": 3000
+    }
+  ]
+}

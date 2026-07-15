@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E088C8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4A9FE8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- 黒背景 -->
+  <rect width="512" height="512" fill="#000000"/>
+
+  <!-- グラデーション吹き出し（円形に近い） -->
+  <path d="M 100 80 Q 200 50 280 60 Q 340 70 350 130 Q 355 180 320 220 Q 280 240 180 240 Q 140 240 120 220 Q 70 180 80 120 Q 85 70 100 80"
+        fill="url(#bubbleGrad)" stroke="none"/>
+
+  <!-- 吹き出しの尾 -->
+  <path d="M 140 240 L 120 300 L 160 260 Z" fill="url(#bubbleGrad)" stroke="none"/>
+
+  <!-- 「防」の文字（白、楷書風） -->
+  <text x="210" y="160" font-size="80" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle" font-family="serif">防</text>
+
+  <!-- 駆け込む人のシルエット（白） -->
+
+  <!-- 頭（円） -->
+  <circle cx="280" cy="320" r="28" fill="white" opacity="0.95"/>
+
+  <!-- 体（短い直線） -->
+  <line x1="280" y1="350" x2="280" y2="410" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- 左腕（上に大きく広げる） -->
+  <line x1="280" y1="365" x2="180" y2="290" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- 右腕（上に大きく広げる） -->
+  <line x1="280" y1="365" x2="380" y2="290" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- 左脚（走る動き、斜め下） -->
+  <line x1="280" y1="410" x2="230" y2="480" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- 右脚（走る動き、斜め下） -->
+  <line x1="280" y1="410" x2="330" y2="480" stroke="white" stroke-width="10" stroke-linecap="round" opacity="0.95"/>
+</svg>
