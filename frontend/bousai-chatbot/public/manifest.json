@@ -15,7 +15,7 @@
       "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "start_url": "./?v=icon-update",
   "display": "standalone",
   "theme_color": "#E088C8",
   "background_color": "#0a0e1a",
