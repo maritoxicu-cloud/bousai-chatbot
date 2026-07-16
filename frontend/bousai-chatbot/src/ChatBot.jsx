@@ -30,6 +30,22 @@ const ChatBot = () => {
   });
   const [userScore, setUserScore] = useState({ total: 0, correct: 0 });
   const [currentPosition, setCurrentPosition] = useState(null);
+  const [showSplash, setShowSplash] = useState(() => {
+    // sessionStorage から showSplash フラグを取得
+    const hasSeen = sessionStorage.getItem('hasSeen防災Con');
+    return !hasSeen;
+  });
+
+  // スプラッシュスクリーン表示・自動進む
+  useEffect(() => {
+    if (showSplash) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem('hasSeen防災Con', 'true');
+      }, 5000); // 5秒後に進む
+      return () => clearTimeout(timer);
+    }
+  }, [showSplash]);
 
   const handleResetScore = () => {
     // スコアをリセット
@@ -666,6 +682,22 @@ const ChatBot = () => {
     }
   };
 
+  if (showSplash) {
+    return (
+      <div className="splash-screen">
+        <div className="splash-content">
+          <div className="splash-icon">
+            <img src={`${process.env.PUBLIC_URL}/icon-with-bg.svg`} alt="防災コンシェルジュ" />
+          </div>
+          <div className="splash-message">
+            <p>防災は『正解』がひとつではありません。</p>
+            <p>学んだ知識を基に、あなたの環境・状況に合わせた対策を考えてみてください。</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="chatbot-container">
       <div className="chatbot-header">
@@ -699,12 +731,6 @@ const ChatBot = () => {
           <button onClick={handlePoliceTipsSelect}>
             🔬 防災ラボ
           </button>
-        </div>
-        <div className="disclaimer">
-          <p>
-            <strong>防災は『正解』がひとつではありません。</strong><br />
-            学んだ知識を基に、あなたの環境・状況に合わせた対策を考えてみてください。
-          </p>
         </div>
       </div>
 
