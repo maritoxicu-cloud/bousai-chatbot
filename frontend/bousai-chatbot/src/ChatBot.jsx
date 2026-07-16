@@ -30,18 +30,13 @@ const ChatBot = () => {
   });
   const [userScore, setUserScore] = useState({ total: 0, correct: 0 });
   const [currentPosition, setCurrentPosition] = useState(null);
-  const [showSplash, setShowSplash] = useState(() => {
-    // sessionStorage から showSplash フラグを取得
-    const hasSeen = sessionStorage.getItem('hasSeen防災Con');
-    return !hasSeen;
-  });
+  const [showSplash, setShowSplash] = useState(true);
 
-  // スプラッシュスクリーン表示・自動進む
+  // スプラッシュスクリーン表示・自動進む（毎回表示）
   useEffect(() => {
     if (showSplash) {
       const timer = setTimeout(() => {
         setShowSplash(false);
-        sessionStorage.setItem('hasSeen防災Con', 'true');
       }, 5000); // 5秒後に進む
       return () => clearTimeout(timer);
     }
