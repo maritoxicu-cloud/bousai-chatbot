@@ -687,7 +687,7 @@ const ChatBot = () => {
       <div className="splash-screen">
         <div className="splash-content">
           <div className="splash-icon">
-            <img src={`${process.env.PUBLIC_URL}/icon-with-bg.svg`} alt="防災コンシェルジュ" />
+            <img src={`${process.env.PUBLIC_URL}/icon.svg`} alt="防災コンシェルジュ" />
           </div>
           <div className="splash-message">
             <p>防災は『正解』がひとつではありません。</p>
