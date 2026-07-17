@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
-import PullToRefresh from 'react-pull-to-refresh';
 import './ChatBot.css';
 
 const API_BASE_URL = 'https://bousai-chatbot-production.up.railway.app';
@@ -678,10 +677,6 @@ const ChatBot = () => {
     }
   };
 
-  const handleReload = () => {
-    window.location.reload();
-  };
-
   if (showSplash) {
     return (
       <div className="splash-screen">
@@ -699,8 +694,7 @@ const ChatBot = () => {
   }
 
   return (
-    <PullToRefresh onRefresh={handleReload}>
-      <div className="chatbot-container">
+    <div className="chatbot-container">
       <div className="chatbot-header">
         <h1>防災コンシェルジュ</h1>
         {userScore.total > 0 && (
@@ -818,7 +812,6 @@ const ChatBot = () => {
         </p>
       </footer>
     </div>
-    </PullToRefresh>
   );
 };
 
