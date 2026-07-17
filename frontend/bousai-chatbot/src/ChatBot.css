@@ -11,26 +11,26 @@
 .chatbot-header {
   background: linear-gradient(135deg, #E088C8 0%, #4A9FE8 100%);
   color: white;
-  padding: 24px 20px;
+  padding: 16px 20px;
   text-align: center;
   box-shadow: 0 4px 16px rgba(224, 136, 200, 0.3);
 }
 
 .chatbot-header h1 {
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   font-size: 28px;
   font-weight: 600;
 }
 
 .chatbot-header p {
-  margin: 0 0 15px 0;
+  margin: 0;
   font-size: 15px;
   opacity: 0.95;
 }
 
 .score-display {
   background: rgba(255, 255, 255, 0.06);
-  padding: 14px 16px;
+  padding: 10px 16px;
   border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
   font-size: 14px;
   display: flex;
@@ -82,7 +82,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 16px 20px;
+  padding: 12px 20px;
   background: rgba(255, 255, 255, 0.02);
   border-top: 0.5px solid rgba(255, 255, 255, 0.1);
 }
