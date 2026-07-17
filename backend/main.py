@@ -161,6 +161,7 @@ async def get_bousai_lab(category: str = None):
         query = supabase.table("bousai_lab").select("*")
         if category:
             query = query.eq("category", category)
+        query = query.order("order", desc=False)
         data = query.execute()
         return {"data": data.data}
     except Exception as e:
