@@ -448,12 +448,12 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の緊急避難所が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
-                const eq = shelter['地震'] ? '○' : '❌';
-                const ts = shelter['津波'] ? '○' : '❌';
-                const fl = shelter['洪水'] ? '○' : '❌';
-                const ht = shelter['高潮'] ? '○' : '❌';
-                const ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
-                const pet = shelter['ペット対応'] ? '○' : '❌';
+                const eq = shelter['地震'] ? '○' : '✖';
+                const ts = shelter['津波'] ? '○' : '✖';
+                const fl = shelter['洪水'] ? '○' : '✖';
+                const ht = shelter['高潮'] ? '○' : '✖';
+                const ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '✖';
+                const pet = shelter['ペット対応'] ? '○' : '✖';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
@@ -547,7 +547,7 @@ const ChatBot = () => {
       setLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/police-tips`);
       if (response.data.data && response.data.data.length > 0) {
-        let bousaiLabList = '🔬 防災ラボ\n\n';
+        let bousaiLabList = '防災ラボ\n\n';
 
         response.data.data.forEach((tip, idx) => {
           bousaiLabList += '【' + tip.category + '】\n';
@@ -612,8 +612,8 @@ const ChatBot = () => {
 
       // 結果メッセージを表示
       const resultText = is_correct
-        ? `✅ ${message}`
-        : `❌ ${message}`;
+        ? `◯ ${message}`
+        : `✖ ${message}`;
 
       setMessages(prev => [...prev, {
         id: prev.length + 1,
@@ -626,7 +626,7 @@ const ChatBot = () => {
         setTimeout(() => {
           setMessages(prev => [...prev, {
             id: prev.length + 1,
-            text: '📚 解説：\n' + currentQuiz.explanation,
+            text: '解説：\n' + currentQuiz.explanation,
             sender: 'bot',
             processAllContent: true
           }]);
@@ -700,7 +700,7 @@ const ChatBot = () => {
         {userScore.total > 0 && (
           <div className="score-display">
             <div className="score-info">
-              📊 スコア: <strong>{userScore.correct}/{userScore.total}</strong>
+              スコア: <strong>{userScore.correct}/{userScore.total}</strong>
               {userScore.total > 0 && (
                 <span className="accuracy">
                   ({Math.round((userScore.correct / userScore.total) * 100)}%)
@@ -708,23 +708,23 @@ const ChatBot = () => {
               )}
             </div>
             <button onClick={handleResetScore} className="reset-button">
-              🔄 リセット
+              リセット
             </button>
           </div>
         )}
         <p>こんなことが聞けます：</p>
         <div className="quick-buttons">
           <button onClick={handleQuizSelect}>
-            ❓ 防災クイズ
+            防災クイズ
           </button>
           <button onClick={handleKnowledgeSelect}>
-            ℹ️ 防災知識
+            防災知識
           </button>
           <button onClick={handleShelterSelect}>
             📍 避難所を探す
           </button>
           <button onClick={handlePoliceTipsSelect}>
-            🔬 防災ラボ
+            防災ラボ
           </button>
         </div>
       </div>
@@ -773,7 +773,7 @@ const ChatBot = () => {
                   ➡️ 次へ
                 </button>
                 <button onClick={handleChangeCategory} className="nav-button change">
-                  🔄 他のジャンルを選ぶ
+                  他のジャンルを選ぶ
                 </button>
               </div>
             )}
@@ -784,7 +784,7 @@ const ChatBot = () => {
                   ➡️ 次へ
                 </button>
                 <button onClick={handleChangeCategory} className="nav-button change">
-                   🔄 他のジャンルを選ぶ
+                   他のジャンルを選ぶ
                 </button>
                </div>
             )}
