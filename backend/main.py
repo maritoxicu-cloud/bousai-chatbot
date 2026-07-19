@@ -11,9 +11,17 @@ from math import radians, cos, sin, asin, sqrt
 
 load_dotenv()
 
-# Supabase 設定
-SUPABASE_URL = "https://xaqhiexouefcwphjeaao.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhcWhpZXhvdWVmY3dwaGplYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTQ2ODcsImV4cCI6MjA5ODE5MDY4N30.vyOzAvKodoLl5Pcja2a4uKc_aVSVuh1Z-ucqVQ-R6bQ"
+# Supabase 設定（環境変数から読み込み）
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# デバッグ用ログ
+print(f"DEBUG: SUPABASE_URL is set: {bool(SUPABASE_URL)}")
+print(f"DEBUG: SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
+
+# 環境変数が設定されていない場合はエラー
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
