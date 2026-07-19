@@ -42,7 +42,7 @@ wheels/
 Thumbs.db
 
 # Build
-/frontend/bousai-chatbot/build/
+# /frontend/bousai-chatbot/build/
 /frontend/bousai-chatbot/.next/
 
 # Logs
