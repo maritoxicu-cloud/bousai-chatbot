@@ -123,7 +123,7 @@ async def submit_quiz_answer_debug(request: Request):
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
 @limiter.limit("50/minute")
-async def submit_quiz_answer(req: Request, request: QuizAnswerRequest):
+async def submit_quiz_answer(request: QuizAnswerRequest, req: Request):
     try:
         print(f"DEBUG: Received validated request: {request.dict()}")
         # クイズ情報を取得
@@ -241,7 +241,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 # 近くの避難所を検索
 @app.post("/api/shelters/nearby")
 @limiter.limit("100/minute")
-async def get_nearby_shelters(req: Request, request: NearbySheltersRequest):
+async def get_nearby_shelters(request: NearbySheltersRequest, req: Request):
     try:
         # 全避難所データを取得
         response = supabase.table("shelters").select("*").execute()
