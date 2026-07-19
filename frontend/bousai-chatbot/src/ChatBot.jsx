@@ -407,6 +407,67 @@ const ChatBot = () => {
     }]);
   };
 
+  // キーワードからカテゴリを検出して知識を表示
+  const handleKnowledgeByKeyword = async (keyword) => {
+    const categoryMap = {
+      '地震': '地震',
+      '洪水': '洪水',
+      '水害': '洪水',
+      '台風': '台風',
+      '火災': '火災',
+      '火山': '火山',
+      '備蓄': '備蓄',
+      'ペット': 'ペット災害'
+    };
+
+    let detectedCategory = null;
+    for (const [key, category] of Object.entries(categoryMap)) {
+      if (keyword.includes(key)) {
+        detectedCategory = category;
+        break;
+      }
+    }
+
+    if (detectedCategory) {
+      setCurrentCategory(detectedCategory);
+      setSelectedType('knowledge');
+      setMode('knowledge');
+      setShowNavigation(false);
+      setLoading(true);
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/knowledge`, {
+          params: { category: detectedCategory }
+        });
+
+        if (response.data.data && response.data.data.length > 0) {
+          setCurrentKnowledge(response.data.data);
+          setMessages(prev => [...prev, {
+            id: prev.length + 1,
+            text: `「${detectedCategory}」についての知識を表示します！`,
+            sender: 'bot'
+          }]);
+        } else {
+          setMessages(prev => [...prev, {
+            id: prev.length + 1,
+            text: `申し訳ありません。「${detectedCategory}」の知識が見つかりませんでした。`,
+            sender: 'bot'
+          }]);
+        }
+      } catch (error) {
+        console.error('Error fetching knowledge:', error);
+        setMessages(prev => [...prev, {
+          id: prev.length + 1,
+          text: '知識の取得に失敗しました。もう一度お試しください。',
+          sender: 'bot'
+        }]);
+      }
+    } else {
+      handleKnowledgeSelect();
+    }
+    setLoading(false);
+  };
+
   const handleShelterSelect = async () => {
     setCurrentQuiz(null);
     setCurrentKnowledge(null);
@@ -657,7 +718,11 @@ const ChatBot = () => {
     try {
       if (userInput.includes('クイズ')) {
         handleQuizSelect();
-      } else if (userInput.includes('知識') || userInput.includes('防災')) {
+      } else if (userInput.includes('地震') || userInput.includes('洪水') || userInput.includes('水害') ||
+                 userInput.includes('台風') || userInput.includes('火災') || userInput.includes('火山') ||
+                 userInput.includes('備蓄') || userInput.includes('ペット')) {
+        await handleKnowledgeByKeyword(userInput);
+      } else if (userInput.includes('知識') || userInput.includes('防災知識')) {
         handleKnowledgeSelect();
       } else if (userInput.includes('避難')) {
         await handleShelterSelect();
