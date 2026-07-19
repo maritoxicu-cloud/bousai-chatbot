@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 from typing import Optional, List
 import json
 from math import radians, cos, sin, asin, sqrt
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
@@ -46,6 +49,14 @@ class NearbySheltersRequest(BaseModel):
 
 app = FastAPI(title="防災チャットボット API")
 
+# レート制限の設定
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(
+    status_code=429,
+    content={"detail": "リクエストが多すぎます。しばらく待ってから再度お試しください。"}
+))
+
 # CORS 設定
 app.add_middleware(
     CORSMiddleware,
@@ -71,7 +82,8 @@ async def health():
 
 # 防災知識取得
 @app.get("/api/knowledge")
-async def get_knowledge(category: str = None):
+@limiter.limit("50/minute")
+async def get_knowledge(request: Request, category: str = None):
     query = supabase.table("knowledge").select("*")
     if category:
         query = query.eq("category", category)
@@ -80,7 +92,8 @@ async def get_knowledge(category: str = None):
 
 # クイズ取得
 @app.get("/api/quizzes")
-async def get_quizzes(category: str = None, difficulty: str = None):
+@limiter.limit("50/minute")
+async def get_quizzes(request: Request, category: str = None, difficulty: str = None):
     query = supabase.table("quizzes").select("*")
     if category:
         query = query.eq("category", category)
@@ -109,7 +122,8 @@ async def submit_quiz_answer_debug(request: Request):
 
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
-async def submit_quiz_answer(request: QuizAnswerRequest):
+@limiter.limit("50/minute")
+async def submit_quiz_answer(req: Request, request: QuizAnswerRequest):
     try:
         print(f"DEBUG: Received validated request: {request.dict()}")
         # クイズ情報を取得
@@ -164,7 +178,8 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_bousai_lab(category: str = None):
+@limiter.limit("50/minute")
+async def get_bousai_lab(request: Request, category: str = None):
     try:
         query = supabase.table("bousai_lab").select("*")
         if category:
@@ -225,7 +240,8 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 # 近くの避難所を検索
 @app.post("/api/shelters/nearby")
-async def get_nearby_shelters(request: NearbySheltersRequest):
+@limiter.limit("100/minute")
+async def get_nearby_shelters(req: Request, request: NearbySheltersRequest):
     try:
         # 全避難所データを取得
         response = supabase.table("shelters").select("*").execute()
