@@ -2,12 +2,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from supabase import create_client, Client
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field
 import os
 from dotenv import load_dotenv
 from typing import Optional, List
 import json
+import re
 from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
 from datetime import datetime
@@ -18,13 +20,22 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-# デバッグ用ログ
-print(f"DEBUG: SUPABASE_URL is set: {bool(SUPABASE_URL)}")
-print(f"DEBUG: SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
+# CORS 許可ドメイン（環境変数から読み込み、デフォルトは本番ドメイン）
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "https://bousai-chatbot.vercel.app,http://localhost:3000"
+).split(",")
+
+# デバッグモード（本番環境では False）
+DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
 # 環境変数が設定されていない場合はエラー
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
+
+if DEBUG_MODE:
+    print(f"DEBUG: SUPABASE_URL is set: {bool(SUPABASE_URL)}")
+    print(f"DEBUG: SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -60,10 +71,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 # リクエスト/レスポンスモデル
 class QuizAnswerRequest(BaseModel):
-    session_id: str
-    quiz_id: str
-    user_answer: str
-    category: str
+    session_id: str = Field(..., min_length=1, max_length=100)
+    quiz_id: str = Field(..., min_length=1, max_length=100)
+    user_answer: str = Field(..., min_length=1, max_length=500)
+    category: str = Field(..., min_length=1, max_length=100)
 
 class QuizAnswerResponse(BaseModel):
     is_correct: bool
@@ -72,33 +83,62 @@ class QuizAnswerResponse(BaseModel):
     message: str
 
 class NearbySheltersRequest(BaseModel):
-    latitude: float
-    longitude: float
-    max_distance: float = 5  # km（デフォルト5km）
-    limit: int = 10  # 最大10件
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    max_distance: float = Field(default=5, ge=0.1, le=50)  # km（0.1～50km）
+    limit: int = Field(default=10, ge=1, le=20)  # 最大20件
 
 app = FastAPI(title="防災チャットボット API")
+
+# セキュアヘッダーミドルウェア
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # XSS対策
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # HSTS（HTTPS強制）
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # CSP（コンテンツセキュリティポリシー）
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://xaqhiexouefcwphjeaao.supabase.co"
+        # Referrer Policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 
 # レート制限ミドルウェアを追加（全エンドポイントに適用）
 app.add_middleware(RateLimitMiddleware, requests_per_minute=150)
 
-# CORS 設定
+# セキュアヘッダーミドルウェアを追加
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Trusted Host ミドルウェア（ホストヘッダー検証）
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*.up.railway.app", "localhost", "127.0.0.1"])
+
+# CORS 設定（厳格化）
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+    max_age=600,
 )
 
 # バリデーションエラーをキャッチするカスタム例外ハンドラー
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
-    print(f"DEBUG: Validation Error: {exc}")
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors()}
-    )
+    if DEBUG_MODE:
+        print(f"DEBUG: Validation Error: {exc}")
+        return JSONResponse(
+            status_code=422,
+            content={"detail": exc.errors()}
+        )
+    else:
+        return JSONResponse(
+            status_code=422,
+            content={"detail": "リクエスト形式が正しくありません"}
+        )
 
 # ヘルスチェック
 @app.get("/health")
@@ -132,22 +172,12 @@ async def get_shelters(latitude: float = None, longitude: float = None):
     data = query.execute()
     return {"data": data.data}
 
-# クイズ回答を記録（デバッグ用）
-@app.post("/api/quiz-answer-debug")
-async def submit_quiz_answer_debug(request: Request):
-    try:
-        body = await request.json()
-        print(f"DEBUG: Raw request body: {body}")
-        return {"received": body}
-    except Exception as e:
-        print(f"DEBUG: Error reading body: {e}")
-        return {"error": str(e)}
-
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
 async def submit_quiz_answer(request: QuizAnswerRequest):
     try:
-        print(f"DEBUG: Received validated request: {request.dict()}")
+        if DEBUG_MODE:
+            print(f"DEBUG: Received validated request: {request.dict()}")
         # クイズ情報を取得
         quiz_data = supabase.table("quizzes").select("*").eq("id", request.quiz_id).execute()
 
@@ -194,9 +224,13 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
         raise
     except Exception as e:
         import traceback
-        print(f"ERROR: {str(e)}")
-        print(f"TRACEBACK: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        if DEBUG_MODE:
+            print(f"ERROR: {str(e)}")
+            print(f"TRACEBACK: {traceback.format_exc()}")
+            raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        else:
+            print(f"ERROR: {str(e)}")
+            raise HTTPException(status_code=500, detail="エラーが発生しました")
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
@@ -209,8 +243,12 @@ async def get_bousai_lab(category: str = None):
         data = query.execute()
         return {"data": data.data}
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        return {"data": [], "error": str(e)}
+        if DEBUG_MODE:
+            print(f"ERROR: {str(e)}")
+            return {"data": [], "error": str(e)}
+        else:
+            print(f"ERROR: {str(e)}")
+            return {"data": []}
 
 # ユーザースコア取得
 @app.get("/api/user-scores/{session_id}")
@@ -244,7 +282,10 @@ async def get_user_scores(session_id: str):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        if DEBUG_MODE:
+            raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        else:
+            raise HTTPException(status_code=500, detail="エラーが発生しました")
 
 # 距離計算（Haversine formula）
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -300,8 +341,12 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
         }
 
     except Exception as e:
-        print(f"ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        if DEBUG_MODE:
+            print(f"ERROR: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
+        else:
+            print(f"ERROR: {str(e)}")
+            raise HTTPException(status_code=500, detail="エラーが発生しました")
 
 if __name__ == "__main__":
     import uvicorn
