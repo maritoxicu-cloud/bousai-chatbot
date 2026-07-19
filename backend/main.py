@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from supabase import create_client, Client
 from pydantic import BaseModel, ValidationError
 import os
@@ -8,6 +9,8 @@ from dotenv import load_dotenv
 from typing import Optional, List
 import json
 from math import radians, cos, sin, asin, sqrt
+from collections import defaultdict
+from datetime import datetime
 
 load_dotenv()
 
@@ -24,6 +27,36 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# レート制限用ミドルウェア
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, requests_per_minute: int = 100):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.request_history = defaultdict(list)  # IP -> [timestamps]
+
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host if request.client else "unknown"
+        now = datetime.now()
+
+        # 1分以上古いリクエストを削除
+        self.request_history[client_ip] = [
+            ts for ts in self.request_history[client_ip]
+            if (now - ts).total_seconds() < 60
+        ]
+
+        # リクエスト数が制限を超えているかチェック
+        if len(self.request_history[client_ip]) >= self.requests_per_minute:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "リクエストが多すぎます。しばらく待ってから再度お試しください。"}
+            )
+
+        # リクエストを記録
+        self.request_history[client_ip].append(now)
+
+        response = await call_next(request)
+        return response
 
 # リクエスト/レスポンスモデル
 class QuizAnswerRequest(BaseModel):
@@ -45,6 +78,9 @@ class NearbySheltersRequest(BaseModel):
     limit: int = 10  # 最大10件
 
 app = FastAPI(title="防災チャットボット API")
+
+# レート制限ミドルウェアを追加（全エンドポイントに適用）
+app.add_middleware(RateLimitMiddleware, requests_per_minute=150)
 
 # CORS 設定
 app.add_middleware(
