@@ -166,10 +166,10 @@
 }
 
 .message.user .message-content {
-  background: linear-gradient(135deg, #E088C8 0%, #4A9FE8 100%);
-  color: white;
+  background: rgba(131, 56, 236, 0.15);
+  color: rgba(255, 255, 255, 0.95);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(224, 136, 200, 0.2);
+  border: 0.5px solid rgba(131, 56, 236, 0.3);
 }
 
 .message.bot .message-content {
