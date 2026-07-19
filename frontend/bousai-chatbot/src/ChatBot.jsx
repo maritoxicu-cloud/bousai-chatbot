@@ -448,12 +448,12 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の緊急避難所が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
-                const eq = shelter['地震'] ? '○' : '✖';
-                const ts = shelter['津波'] ? '○' : '✖';
-                const fl = shelter['洪水'] ? '○' : '✖';
-                const ht = shelter['高潮'] ? '○' : '✖';
-                const ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '✖';
-                const pet = shelter['ペット対応'] ? '○' : '✖';
+                const eq = shelter['地震'] ? '○' : '❌';
+                const ts = shelter['津波'] ? '○' : '❌';
+                const fl = shelter['洪水'] ? '○' : '❌';
+                const ht = shelter['高潮'] ? '○' : '❌';
+                const ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
+                const pet = shelter['ペット対応'] ? '○' : '❌';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
