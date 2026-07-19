@@ -83,7 +83,7 @@ async def health():
 # 防災知識取得
 @app.get("/api/knowledge")
 @limiter.limit("50/minute")
-async def get_knowledge(request: Request, category: str = None):
+async def get_knowledge(category: str = None):
     query = supabase.table("knowledge").select("*")
     if category:
         query = query.eq("category", category)
@@ -93,7 +93,7 @@ async def get_knowledge(request: Request, category: str = None):
 # クイズ取得
 @app.get("/api/quizzes")
 @limiter.limit("50/minute")
-async def get_quizzes(request: Request, category: str = None, difficulty: str = None):
+async def get_quizzes(category: str = None, difficulty: str = None):
     query = supabase.table("quizzes").select("*")
     if category:
         query = query.eq("category", category)
@@ -123,7 +123,7 @@ async def submit_quiz_answer_debug(request: Request):
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
 @limiter.limit("50/minute")
-async def submit_quiz_answer(request: QuizAnswerRequest, req: Request):
+async def submit_quiz_answer(request: QuizAnswerRequest):
     try:
         print(f"DEBUG: Received validated request: {request.dict()}")
         # クイズ情報を取得
@@ -179,7 +179,7 @@ async def submit_quiz_answer(request: QuizAnswerRequest, req: Request):
 # 防災ラボ取得
 @app.get("/api/police-tips")
 @limiter.limit("50/minute")
-async def get_bousai_lab(request: Request, category: str = None):
+async def get_bousai_lab(category: str = None):
     try:
         query = supabase.table("bousai_lab").select("*")
         if category:
@@ -241,7 +241,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 # 近くの避難所を検索
 @app.post("/api/shelters/nearby")
 @limiter.limit("100/minute")
-async def get_nearby_shelters(request: NearbySheltersRequest, req: Request):
+async def get_nearby_shelters(request: NearbySheltersRequest):
     try:
         # 全避難所データを取得
         response = supabase.table("shelters").select("*").execute()
