@@ -540,7 +540,8 @@ const ChatBot = () => {
                 id: Date.now(),
                 text: shelterList,
                 sender: 'bot',
-                isUrl: true
+                isUrl: true,
+                isShelterInfo: true
               };
 
               // SessionStorage に避難所情報を保存
@@ -804,12 +805,42 @@ const ChatBot = () => {
         {messages.map((msg, idx) => (
           <div key={msg.id}>
             <div className={`message ${msg.sender}`}>
-              <div className="message-content" onClick={(e) => {
-                if (e.target.textContent.includes('ℹ️')) {
-                  setShowShelterModal(true);
-                }
-              }}>
-                {msg.isUrl ? convertUrlsToLinks(msg.text) : (msg.processAllContent ? processContentRuby(msg.text) : convertFuriganaToRuby(msg.text))}
+              <div className="message-content">
+                {msg.isShelterInfo ? (
+                  <>
+                    {convertUrlsToLinks(msg.text).map((element, idx) => {
+                      if (typeof element === 'string') {
+                        const parts = element.split(/(i|ℹ️)/);
+                        return (
+                          <span key={idx}>
+                            {parts.map((part, pidx) =>
+                              part === 'i' || part === 'ℹ️' ? (
+                                <button
+                                  key={`info-${pidx}`}
+                                  onClick={() => setShowShelterModal(true)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'inherit',
+                                    cursor: 'pointer',
+                                    padding: '0',
+                                    fontSize: 'inherit',
+                                    fontFamily: 'inherit'
+                                  }}
+                                >
+                                  {part}
+                                </button>
+                              ) : part
+                            )}
+                          </span>
+                        );
+                      }
+                      return element;
+                    })}
+                  </>
+                ) : (
+                  msg.isUrl ? convertUrlsToLinks(msg.text) : (msg.processAllContent ? processContentRuby(msg.text) : convertFuriganaToRuby(msg.text))
+                )}
               </div>
             </div>
             
