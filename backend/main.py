@@ -304,28 +304,49 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 @app.post("/api/shelters/nearby")
 async def get_nearby_shelters(request: NearbySheltersRequest):
     try:
-        # 全避難所データを取得
+        # 緊急避難所データを取得
         response = supabase.table("shelters").select("*").execute()
         shelters = response.data
 
-        if not shelters:
-            return {"data": []}
-
-        # 距離を計算して、リストに追加
         shelters_with_distance = []
-        for shelter in shelters:
-            distance = calculate_distance(
-                request.latitude,
-                request.longitude,
-                float(shelter["緯度"]),
-                float(shelter["経度"])
-            )
 
-            # max_distance 以内のみ
-            if distance <= request.max_distance:
-                shelter_copy = shelter.copy()
-                shelter_copy["distance"] = round(distance, 2)
-                shelters_with_distance.append(shelter_copy)
+        # 緊急避難所から検索
+        if shelters:
+            for shelter in shelters:
+                distance = calculate_distance(
+                    request.latitude,
+                    request.longitude,
+                    float(shelter["緯度"]),
+                    float(shelter["経度"])
+                )
+
+                # max_distance 以内のみ
+                if distance <= request.max_distance:
+                    shelter_copy = shelter.copy()
+                    shelter_copy["distance"] = round(distance, 2)
+                    shelter_copy["shelter_type"] = "緊急"
+                    shelters_with_distance.append(shelter_copy)
+
+        # 緊急避難所が見つからない場合は指定避難所を検索
+        if not shelters_with_distance:
+            response_designated = supabase.table("shelters_指定").select("*").execute()
+            shelters_designated = response_designated.data
+
+            if shelters_designated:
+                for shelter in shelters_designated:
+                    distance = calculate_distance(
+                        request.latitude,
+                        request.longitude,
+                        float(shelter["緯度"]),
+                        float(shelter["経度"])
+                    )
+
+                    # max_distance 以内のみ
+                    if distance <= request.max_distance:
+                        shelter_copy = shelter.copy()
+                        shelter_copy["distance"] = round(distance, 2)
+                        shelter_copy["shelter_type"] = "指定"
+                        shelters_with_distance.append(shelter_copy)
 
         # 距離でソート（近い順）
         shelters_with_distance.sort(key=lambda x: x["distance"])

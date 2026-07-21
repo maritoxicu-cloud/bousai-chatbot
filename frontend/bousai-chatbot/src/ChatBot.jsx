@@ -31,6 +31,8 @@ const ChatBot = () => {
   const [userScore, setUserScore] = useState({ total: 0, correct: 0 });
   const [currentPosition, setCurrentPosition] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
+  const [showShelterModal, setShowShelterModal] = useState(false);
+  const [currentShelterType, setCurrentShelterType] = useState(null);
 
   // スプラッシュスクリーン表示・自動進む（毎回表示）
   useEffect(() => {
@@ -506,7 +508,9 @@ const ChatBot = () => {
 
             if (response.data.data.length > 0) {
               // 避難所リストをまとめて表示
-              let shelterList = '📍 現在地から ' + response.data.count + ' 件の緊急避難所が見つかりました!\n\n';
+              const shelterType = response.data.data[0]?.shelter_type || '緊急';
+              const shelterTypeLabel = shelterType === '緊急' ? '緊急避難所' : '指定避難所';
+              let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
                 const eq = shelter['地震'] ? '○' : '❌';
@@ -517,8 +521,10 @@ const ChatBot = () => {
                 const pet = shelter['ペット対応'] ? '○' : '❌';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
+                const typeLabel = shelter.shelter_type === '緊急' ? '' : ' （指定避難所）';
+
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
-                shelterList += shelter['施設・場所名'] + '\n';
+                shelterList += shelter['施設・場所名'] + typeLabel + ' ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
                 shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
@@ -798,7 +804,11 @@ const ChatBot = () => {
         {messages.map((msg, idx) => (
           <div key={msg.id}>
             <div className={`message ${msg.sender}`}>
-              <div className="message-content">
+              <div className="message-content" onClick={(e) => {
+                if (e.target.textContent.includes('ℹ️')) {
+                  setShowShelterModal(true);
+                }
+              }}>
                 {msg.isUrl ? convertUrlsToLinks(msg.text) : (msg.processAllContent ? processContentRuby(msg.text) : convertFuriganaToRuby(msg.text))}
               </div>
             </div>
@@ -858,6 +868,21 @@ const ChatBot = () => {
         {loading && <div className="message bot"><div className="message-content">入力中...</div></div>}
         <div ref={messagesEndRef} />
       </div>
+
+      {showShelterModal && (
+        <div className="shelter-modal-overlay" onClick={() => setShowShelterModal(false)}>
+          <div className="shelter-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowShelterModal(false)}>✕</button>
+            <h3>避難所について</h3>
+            <div className="modal-content">
+              <p><strong>🔹指定緊急避難所</strong></p>
+              <p>命を守るための一時的避難場所</p>
+              <p style={{ marginTop: '16px' }}><strong>🔹指定避難所</strong></p>
+              <p>災害後に生活するための施設</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form className="input-form" onSubmit={handleSendMessage}>
         <input
