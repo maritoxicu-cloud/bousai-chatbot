@@ -329,8 +329,19 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
 
         # 緊急避難所が見つからない場合は指定避難所を検索
         if not shelters_with_distance:
-            response_designated = supabase.table("shelters_指定").select("*").execute()
-            shelters_designated = response_designated.data
+            # 指定避難所を全件取得（id順でページネーション、1000件制限を回避）
+            shelters_designated = []
+            page = 0
+            while True:
+                start = page * 1000
+                end = start + 999
+                response_designated = supabase.table("shelters_指定").select("*").order("id", desc=False).range(start, end).execute()
+                if not response_designated.data:
+                    break
+                shelters_designated.extend(response_designated.data)
+                if len(response_designated.data) < 1000:
+                    break
+                page += 1
 
             if shelters_designated:
                 for shelter in shelters_designated:
