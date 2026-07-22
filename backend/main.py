@@ -336,7 +336,7 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             page = 0
             while True:
                 start = page * 1000
-                end = start + 999
+                end = start + 1000
                 response_designated = supabase.table("shelters_指定").select("*").order("id", desc=False).range(start, end).execute()
                 page_count = len(response_designated.data) if response_designated.data else 0
                 if DEBUG_MODE:
