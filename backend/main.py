@@ -178,11 +178,6 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
     try:
         if DEBUG_MODE:
             print(f"DEBUG: Received validated request: {request.dict()}")
-
-        # セッション ID をバリデーション
-        if not request.session_id or len(request.session_id) < 5:
-            raise HTTPException(status_code=400, detail="無効なセッション ID です")
-
         # クイズ情報を取得
         quiz_data = supabase.table("quizzes").select("*").eq("id", request.quiz_id).execute()
 
