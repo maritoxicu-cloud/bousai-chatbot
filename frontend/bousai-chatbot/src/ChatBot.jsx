@@ -526,7 +526,10 @@ const ChatBot = () => {
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
                 shelterList += shelter['施設・場所名'] + typeLabel + ' ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
-                shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
+                // 指定避難所の場合は災害対応情報を表示しない
+                if (shelter.shelter_type === '緊急') {
+                  shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
+                }
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
               });
 
