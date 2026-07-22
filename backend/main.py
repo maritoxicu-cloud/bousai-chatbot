@@ -329,6 +329,8 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
 
         # 緊急避難所が見つからない場合は指定避難所を検索
         if not shelters_with_distance:
+            if DEBUG_MODE:
+                print(f"DEBUG: 緊急避難所が見つかりませんでした。指定避難所を検索します。")
             # 指定避難所を全件取得（id順でページネーション、1000件制限を回避）
             shelters_designated = []
             page = 0
@@ -336,6 +338,9 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                 start = page * 1000
                 end = start + 999
                 response_designated = supabase.table("shelters_指定").select("*").order("id", desc=False).range(start, end).execute()
+                page_count = len(response_designated.data) if response_designated.data else 0
+                if DEBUG_MODE:
+                    print(f"DEBUG: ページ {page}: id {start}～{end} から {page_count} 件取得")
                 if not response_designated.data:
                     break
                 shelters_designated.extend(response_designated.data)
@@ -343,7 +348,15 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                     break
                 page += 1
 
+            if DEBUG_MODE:
+                print(f"DEBUG: 指定避難所合計データ数: {len(shelters_designated) if shelters_designated else 0}")
+                if shelters_designated and len(shelters_designated) > 0:
+                    first_id = shelters_designated[0].get("id", "?")
+                    last_id = shelters_designated[-1].get("id", "?")
+                    print(f"DEBUG: 指定避難所の範囲: id {first_id} ～ id {last_id}")
+
             if shelters_designated:
+                found_count = 0
                 for shelter in shelters_designated:
                     distance = calculate_distance(
                         request.latitude,
@@ -354,10 +367,14 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
 
                     # max_distance 以内のみ
                     if distance <= request.max_distance:
+                        found_count += 1
                         shelter_copy = shelter.copy()
                         shelter_copy["distance"] = round(distance, 2)
                         shelter_copy["shelter_type"] = "指定"
                         shelters_with_distance.append(shelter_copy)
+
+                if DEBUG_MODE:
+                    print(f"DEBUG: 指定避難所から {found_count} 件見つかりました（検索距離: {request.max_distance}km）")
 
         # 距離でソート（近い順）
         shelters_with_distance.sort(key=lambda x: x["distance"])
