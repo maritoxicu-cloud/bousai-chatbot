@@ -251,13 +251,9 @@ async def get_bousai_lab(category: str = None):
             return {"data": []}
 
 # ユーザースコア取得
-class UserScoresRequest(BaseModel):
-    session_id: str = Field(..., min_length=1, max_length=100)
-
-@app.post("/api/user-scores")
-async def get_user_scores(request: UserScoresRequest):
+@app.get("/api/user-scores/{session_id}")
+async def get_user_scores(session_id: str):
     try:
-        session_id = request.session_id
         scores = supabase.table("quiz_scores").select("*").eq("session_id", session_id).execute()
 
         # カテゴリ別スコア集計
