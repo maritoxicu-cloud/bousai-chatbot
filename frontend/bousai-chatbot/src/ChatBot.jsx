@@ -513,12 +513,18 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
-                const eq = shelter['地震'] ? '○' : '❌';
-                const ts = shelter['津波'] ? '○' : '❌';
-                const fl = shelter['洪水'] ? '○' : '❌';
-                const ht = shelter['高潮'] ? '○' : '❌';
-                const ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
-                const pet = shelter['ペット対応'] ? '○' : '❌';
+                let eq, ts, fl, ht, ls, pet;
+                if (shelter.shelter_type === '指定') {
+                  eq = ts = fl = ht = ls = '○';
+                  pet = '？';
+                } else {
+                  eq = shelter['地震'] ? '○' : '❌';
+                  ts = shelter['津波'] ? '○' : '❌';
+                  fl = shelter['洪水'] ? '○' : '❌';
+                  ht = shelter['高潮'] ? '○' : '❌';
+                  ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
+                  pet = shelter['ペット対応'] ? '○' : '❌';
+                }
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 const typeLabel = shelter.shelter_type === '緊急' ? '' : ' （指定避難所）';
