@@ -513,9 +513,10 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
+                alert('避難所: ' + shelter['施設・場所名'] + ', Type: ' + shelter.shelter_type);
                 let eq, ts, fl, ht, ls, pet;
                 if (shelter.shelter_type === '指定') {
-                  throw new Error('TEST ERROR -修正が実行されています');
+                  alert('✅ 指定避難所が検出されました！');
                   eq = ts = fl = ht = ls = '○';
                   pet = '？';
                 } else {
