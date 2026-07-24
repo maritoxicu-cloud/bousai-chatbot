@@ -371,6 +371,10 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                         shelter_copy = shelter.copy()
                         shelter_copy["distance"] = round(distance, 2)
                         shelter_copy["shelter_type"] = "指定"
+                        # 指定避難所の災害対応情報を削除
+                        disaster_keys = ['地震', '津波', '洪水', '高潮', '崖崩れ、土石流及び地滑り', 'ペット対応']
+                        for key in disaster_keys:
+                            shelter_copy.pop(key, None)
                         shelters_with_distance.append(shelter_copy)
 
                 if DEBUG_MODE:
