@@ -514,9 +514,8 @@ const ChatBot = () => {
 
               response.data.data.forEach((shelter, idx) => {
                 let eq, ts, fl, ht, ls, pet;
-                console.log('Shelter type:', shelter.shelter_type, 'Shelter name:', shelter['施設・場所名']);
                 if (shelter.shelter_type === '指定') {
-                  console.log('⭐ Designated shelter - setting all to ○ and pet to ？');
+                  throw new Error('TEST ERROR -修正が実行されています');
                   eq = ts = fl = ht = ls = '○';
                   pet = '？';
                 } else {
