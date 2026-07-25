@@ -113,7 +113,7 @@ app.add_middleware(RateLimitMiddleware, requests_per_minute=150)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Trusted Host ミドルウェア（ホストヘッダー検証）
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*.up.railway.app", "localhost", "127.0.0.1"])
+# app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*.up.railway.app", "localhost", "127.0.0.1"])
 
 # CORS 設定（厳格化）
 app.add_middleware(
