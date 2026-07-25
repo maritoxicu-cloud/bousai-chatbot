@@ -507,26 +507,20 @@ const ChatBot = () => {
             });
 
             if (response.data.data.length > 0) {
+              throw new Error('TEST-1: response.data.data.length > 0が実行されました');
               // 避難所リストをまとめて表示
               const shelterType = response.data.data[0]?.shelter_type || '緊急';
               const shelterTypeLabel = shelterType === '緊急' ? '緊急避難所' : '指定避難所';
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
-                alert('避難所: ' + shelter['施設・場所名'] + ', Type: ' + shelter.shelter_type);
                 let eq, ts, fl, ht, ls, pet;
-                if (shelter.shelter_type === '指定') {
-                  alert('✅ 指定避難所が検出されました！');
-                  eq = ts = fl = ht = ls = '○';
-                  pet = '？';
-                } else {
-                  eq = shelter['地震'] ? '○' : '❌';
-                  ts = shelter['津波'] ? '○' : '❌';
-                  fl = shelter['洪水'] ? '○' : '❌';
-                  ht = shelter['高潮'] ? '○' : '❌';
-                  ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
-                  pet = shelter['ペット対応'] ? '○' : '❌';
-                }
+                eq = shelter['地震'] ? '○' : '❌';
+                ts = shelter['津波'] ? '○' : '❌';
+                fl = shelter['洪水'] ? '○' : '❌';
+                ht = shelter['高潮'] ? '○' : '❌';
+                ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
+                pet = shelter['ペット対応'] ? '○' : '❌';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 const typeLabel = shelter.shelter_type === '緊急' ? '' : ' （指定避難所）';
