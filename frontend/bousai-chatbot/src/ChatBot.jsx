@@ -513,6 +513,7 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
+                console.log(`[DEBUG] Shelter ${idx}: name="${shelter['施設・場所名']}", type="${shelter.shelter_type}", has_地震=${shelter['地震']}`);
                 let eq, ts, fl, ht, ls, pet;
                 eq = shelter['地震'] ? '○' : '❌';
                 ts = shelter['津波'] ? '○' : '❌';
@@ -528,8 +529,12 @@ const ChatBot = () => {
                 shelterList += shelter['施設・場所名'] + typeLabel + ' ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
                 // 指定避難所の場合は災害対応情報を表示しない
+                console.log(`[DEBUG] Checking: shelter_type !== '指定' = ${shelter.shelter_type !== '指定'}`);
                 if (shelter.shelter_type !== '指定') {
+                  console.log(`[DEBUG] Adding disaster info for shelter ${idx}`);
                   shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
+                } else {
+                  console.log(`[DEBUG] Skipping disaster info for designated shelter ${idx}`);
                 }
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
               });
