@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import './ChatBot.css';
 
+// FINAL CACHE CLEAR: 2026-08-04 20:30:00
+// This forces Vercel to rebuild with the latest condition check logic
 const API_BASE_URL = 'https://bousai-chatbot-production.up.railway.app';
 
 const ChatBot = () => {
