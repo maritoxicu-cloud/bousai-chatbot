@@ -507,7 +507,6 @@ const ChatBot = () => {
             });
 
             if (response.data.data.length > 0) {
-              throw new Error('TEST-1: response.data.data.length > 0が実行されました');
               // 避難所リストをまとめて表示
               const shelterType = response.data.data[0]?.shelter_type || '緊急';
               const shelterTypeLabel = shelterType === '緊急' ? '緊急避難所' : '指定避難所';
