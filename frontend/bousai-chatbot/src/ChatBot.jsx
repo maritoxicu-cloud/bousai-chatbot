@@ -5,7 +5,7 @@ import './ChatBot.css';
 const API_BASE_URL = 'https://bousai-chatbot-production.up.railway.app';
 
 const ChatBot = () => {
-  // Force rebuild: 2026-08-04 v2.0
+  // Force rebuild: 2026-08-04 v3.0 FINAL
   const [messages, setMessages] = useState([
     { id: 1, text: 'こんにちは！防災について何でも聞いてね。クイズ、知識、避難所の検索ができるよ。', sender: 'bot' }
   ]);
