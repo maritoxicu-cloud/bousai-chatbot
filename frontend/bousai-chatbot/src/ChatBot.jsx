@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import DOMPurify from 'dompurify';
+import { v4 as uuidv4 } from 'uuid';
 import './ChatBot.css';
 
 // FINAL CACHE CLEAR: 2026-08-04 20:30:00
@@ -21,21 +23,17 @@ const ChatBot = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const messagesEndRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [sessionId, setSessionId] = useState(() => {
-    let id = localStorage.getItem('quiz_session_id');
+    let id = sessionStorage.getItem('quiz_session_id');
     if (!id) {
-      id = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('quiz_session_id', id);
+      id = `session_${uuidv4()}`;
+      sessionStorage.setItem('quiz_session_id', id);
     }
     return id;
   });
   const [userScore, setUserScore] = useState({ total: 0, correct: 0 });
-  const [currentPosition, setCurrentPosition] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
   const [showShelterModal, setShowShelterModal] = useState(false);
-  const [currentShelterType, setCurrentShelterType] = useState(null);
 
   // スプラッシュスクリーン表示・自動進む（毎回表示）
   useEffect(() => {
@@ -51,9 +49,9 @@ const ChatBot = () => {
     // スコアをリセット
     setUserScore({ total: 0, correct: 0 });
     // 新しいセッション ID を生成
-    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newSessionId = `session_${uuidv4()}`;
     setSessionId(newSessionId);
-    localStorage.setItem('quiz_session_id', newSessionId);
+    sessionStorage.setItem('quiz_session_id', newSessionId);
     // リセット完了メッセージを表示
     setMessages(prev => [...prev, {
       id: prev.length + 1,
@@ -129,14 +127,6 @@ const ChatBot = () => {
     return allResults.length > 0 ? allResults : text;
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const quizCategories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他'];
   const knowledgeCategories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他'];
   const categoryEmojis = {
@@ -165,9 +155,6 @@ const ChatBot = () => {
       try {
         const state = JSON.parse(savedShelterState);
         setMessages(prev => [...prev, state.message]);
-        if (state.currentPosition) {
-          setCurrentPosition(state.currentPosition);
-        }
         sessionStorage.removeItem('shelterState');
       } catch (error) {
         console.error('Error restoring shelter state:', error);
@@ -516,7 +503,6 @@ const ChatBot = () => {
               let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
 
               response.data.data.forEach((shelter, idx) => {
-                console.log(`[DEBUG] Shelter ${idx}: name="${shelter['施設・場所名']}", type="${shelter.shelter_type}", has_地震=${shelter['地震']}`);
                 let eq, ts, fl, ht, ls, pet;
                 eq = shelter['地震'] ? '○' : '❌';
                 ts = shelter['津波'] ? '○' : '❌';
@@ -531,13 +517,8 @@ const ChatBot = () => {
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
                 shelterList += shelter['施設・場所名'] + typeLabel + ' ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
-                // 指定避難所の場合は災害対応情報を表示しない
-                console.log(`[DEBUG] Checking: shelter_type !== '指定' = ${shelter.shelter_type !== '指定'}`);
                 if (shelter.shelter_type !== '指定') {
-                  console.log(`[DEBUG] Adding disaster info for shelter ${idx}`);
                   shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
-                } else {
-                  console.log(`[DEBUG] Skipping disaster info for designated shelter ${idx}`);
                 }
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
               });
@@ -666,14 +647,6 @@ const ChatBot = () => {
     const selectedAnswer = currentQuiz.options[optionIndex];
 
     try {
-      console.log('Quiz:', currentQuiz);
-      console.log('Sending answer:', {
-        session_id: sessionId,
-        quiz_id: currentQuiz.id,
-        user_answer: selectedAnswer,
-        category: currentQuiz.category
-      });
-
       // 本来のエンドポイントに送信（quiz_idを文字列に変換）
       const response = await axios.post(`${API_BASE_URL}/api/quiz-answer`, {
         session_id: sessionId,
@@ -682,7 +655,7 @@ const ChatBot = () => {
         category: currentQuiz.category
       });
 
-      const { is_correct, correct_answer, message } = response.data;
+      const { is_correct, message } = response.data;
 
       // スコアを更新
       setUserScore(prev => ({
@@ -729,8 +702,9 @@ const ChatBot = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userInput = input.toLowerCase();
-    setMessages([...messages, { id: messages.length + 1, text: input, sender: 'user' }]);
+    const sanitizedInput = DOMPurify.sanitize(input.trim(), { ALLOWED_TAGS: [] });
+    const userInput = sanitizedInput.toLowerCase();
+    setMessages([...messages, { id: messages.length + 1, text: sanitizedInput, sender: 'user' }]);
     setInput('');
     setLoading(true);
 

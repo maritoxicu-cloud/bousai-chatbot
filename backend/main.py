@@ -10,9 +10,13 @@ from dotenv import load_dotenv
 from typing import Optional, List
 import json
 import re
+import logging
 from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
 from datetime import datetime
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -35,8 +39,8 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
 
 if DEBUG_MODE:
-    print(f"DEBUG: SUPABASE_URL is set: {bool(SUPABASE_URL)}")
-    print(f"DEBUG: SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
+    logger.debug(f"SUPABASE_URL is set: {bool(SUPABASE_URL)}")
+    logger.debug(f"SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -102,7 +106,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # HSTS（HTTPS強制）
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP（コンテンツセキュリティポリシー）
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://xaqhiexouefcwphjeaao.supabase.co"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https://xaqhiexouefcwphjeaao.supabase.co"
         # Referrer Policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         return response
@@ -130,7 +134,7 @@ app.add_middleware(
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     if DEBUG_MODE:
-        print(f"DEBUG: Validation Error: {exc}")
+        logger.debug(f"Validation Error: {exc}")
         return JSONResponse(
             status_code=422,
             content={"detail": exc.errors()}
@@ -178,7 +182,7 @@ async def get_shelters(latitude: float = None, longitude: float = None):
 async def submit_quiz_answer(request: QuizAnswerRequest):
     try:
         if DEBUG_MODE:
-            print(f"DEBUG: Received validated request: {request.dict()}")
+            logger.debug(f"Received validated request: {request.dict()}")
         # クイズ情報を取得
         quiz_data = supabase.table("quizzes").select("*").eq("id", request.quiz_id).execute()
 
@@ -226,11 +230,10 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
     except Exception as e:
         import traceback
         if DEBUG_MODE:
-            print(f"ERROR: {str(e)}")
-            print(f"TRACEBACK: {traceback.format_exc()}")
+            logger.error(f"Exception: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
         else:
-            print(f"ERROR: {str(e)}")
+            logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
 # 防災ラボ取得
@@ -245,10 +248,10 @@ async def get_bousai_lab(category: str = None):
         return {"data": data.data}
     except Exception as e:
         if DEBUG_MODE:
-            print(f"ERROR: {str(e)}")
+            logger.error(f"Exception: {str(e)}")
             return {"data": [], "error": str(e)}
         else:
-            print(f"ERROR: {str(e)}")
+            logger.error(f"Exception: {str(e)}")
             return {"data": []}
 
 # ユーザースコア取得
@@ -331,7 +334,7 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
         # 緊急避難所が見つからない場合は指定避難所を検索
         if not shelters_with_distance:
             if DEBUG_MODE:
-                print(f"DEBUG: 緊急避難所が見つかりませんでした。指定避難所を検索します。")
+                logger.debug("緊急避難所が見つかりませんでした。指定避難所を検索します。")
             # 指定避難所を全件取得（id順でページネーション、1000件制限を回避）
             shelters_designated = []
             page = 0
@@ -341,7 +344,7 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                 response_designated = supabase.table("shelters_指定").select("*").order("id", desc=False).range(start, end).execute()
                 page_count = len(response_designated.data) if response_designated.data else 0
                 if DEBUG_MODE:
-                    print(f"DEBUG: ページ {page}: id {start}～{end} から {page_count} 件取得")
+                    logger.debug(f"ページ {page}: id {start}～{end} から {page_count} 件取得")
                 if not response_designated.data:
                     break
                 shelters_designated.extend(response_designated.data)
@@ -350,11 +353,11 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                 page += 1
 
             if DEBUG_MODE:
-                print(f"DEBUG: 指定避難所合計データ数: {len(shelters_designated) if shelters_designated else 0}")
+                logger.debug(f"指定避難所合計データ数: {len(shelters_designated) if shelters_designated else 0}")
                 if shelters_designated and len(shelters_designated) > 0:
                     first_id = shelters_designated[0].get("id", "?")
                     last_id = shelters_designated[-1].get("id", "?")
-                    print(f"DEBUG: 指定避難所の範囲: id {first_id} ～ id {last_id}")
+                    logger.debug(f"指定避難所の範囲: id {first_id} ～ id {last_id}")
 
             if shelters_designated:
                 found_count = 0
@@ -379,7 +382,7 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
                         shelters_with_distance.append(shelter_copy)
 
                 if DEBUG_MODE:
-                    print(f"DEBUG: 指定避難所から {found_count} 件見つかりました（検索距離: {request.max_distance}km）")
+                    logger.debug(f"指定避難所から {found_count} 件見つかりました（検索距離: {request.max_distance}km）")
 
         # 距離でソート（近い順）
         shelters_with_distance.sort(key=lambda x: x["distance"])
@@ -396,10 +399,10 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
 
     except Exception as e:
         if DEBUG_MODE:
-            print(f"ERROR: {str(e)}")
+            logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail=f"エラーが発生しました: {str(e)}")
         else:
-            print(f"ERROR: {str(e)}")
+            logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
 if __name__ == "__main__":
