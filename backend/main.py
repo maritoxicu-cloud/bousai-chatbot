@@ -17,6 +17,7 @@ from datetime import datetime
 load_dotenv()
 
 # Supabase 設定（環境変数から読み込み）
+# FINAL REBUILD: 2026-08-04 - Ensure Vercel deploys latest frontend code
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
