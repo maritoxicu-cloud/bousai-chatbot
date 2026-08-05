@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -166,7 +166,7 @@ async def health():
 
 # 防災知識取得
 @app.get("/api/knowledge")
-async def get_knowledge(category: str = Field(None, max_length=100)):
+async def get_knowledge(category: str = Query(None, max_length=100)):
     if category:
         # カテゴリ値の基本検証（許可されたカテゴリのみ）
         valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他']
@@ -181,7 +181,7 @@ async def get_knowledge(category: str = Field(None, max_length=100)):
 
 # クイズ取得
 @app.get("/api/quizzes")
-async def get_quizzes(category: str = Field(None, max_length=100), difficulty: str = Field(None, max_length=50)):
+async def get_quizzes(category: str = Query(None, max_length=100), difficulty: str = Query(None, max_length=50)):
     valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他']
     valid_difficulties = ['easy', 'medium', 'hard']
 
@@ -266,7 +266,7 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_bousai_lab(category: str = Field(None, max_length=100)):
+async def get_bousai_lab(category: str = Query(None, max_length=100)):
     try:
         if category:
             # カテゴリ値の基本検証
@@ -290,7 +290,7 @@ async def get_bousai_lab(category: str = Field(None, max_length=100)):
 
 # ユーザースコア取得
 @app.get("/api/user-scores/{session_id}")
-async def get_user_scores(session_id: str = Field(..., min_length=1, max_length=100)):
+async def get_user_scores(session_id: str = Path(..., min_length=1, max_length=100)):
     try:
         scores = supabase.table("quiz_scores").select("*").eq("session_id", session_id).execute()
 
