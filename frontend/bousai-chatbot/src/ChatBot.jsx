@@ -136,6 +136,22 @@ const ChatBot = () => {
     return allResults.length > 0 ? allResults : text;
   };
 
+  // エラーメッセージを取得する関数
+  const getErrorMessage = (error) => {
+    if (error.response?.status === 401) {
+      return 'APIキーが無効です。管理者にお問い合わせください。';
+    } else if (error.response?.status === 429) {
+      return 'リクエストが多すぎます。少しお待ちください。';
+    } else if (error.response?.status === 400) {
+      return 'リクエストが正しくありません。入力をご確認ください。';
+    } else if (error.response?.status >= 500) {
+      return 'サーバーエラーが発生しました。しばらく後にお試しください。';
+    } else if (error.message === 'Network Error') {
+      return 'ネットワークに接続できません。インターネット接続をご確認ください。';
+    }
+    return 'エラーが発生しました。もう一度お試しください。';
+  };
+
   const quizCategories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他'];
   const knowledgeCategories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他'];
   const categoryEmojis = {
@@ -338,10 +354,9 @@ const ChatBot = () => {
         }
       }
     } catch (error) {
-      console.error('Error:', error);
       setMessages(prev => [...prev, {
         id: uuidv4(),
-        text: 'エラーが発生しました。',
+        text: getErrorMessage(error),
         sender: 'bot'
       }]);
     } finally {
@@ -594,10 +609,9 @@ const ChatBot = () => {
         }
       );
     } catch (error) {
-      console.error('Error:', error);
       setMessages(prev => [...prev, {
         id: uuidv4(),
-        text: 'エラーが発生しました。',
+        text: getErrorMessage(error),
         sender: 'bot'
       }]);
       setLoading(false);
