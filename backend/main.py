@@ -48,18 +48,6 @@ if DEBUG_MODE:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# 認証関数
-async def verify_api_key(request: Request):
-    auth_header = request.headers.get("authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="無効な API キーです")
-
-    token = auth_header.replace("Bearer ", "")
-    if token != API_KEY:
-        raise HTTPException(status_code=401, detail="無効な API キーです")
-
-    return token
-
 # レート制限用ミドルウェア
 class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, requests_per_minute: int = 100):
@@ -179,7 +167,7 @@ async def health():
 
 # 防災知識取得
 @app.get("/api/knowledge")
-async def get_knowledge(category: str = Field(None, max_length=100), token: str = Depends(verify_api_key)):
+async def get_knowledge(category: str = Field(None, max_length=100)):
     if category:
         # カテゴリ値の基本検証（許可されたカテゴリのみ）
         valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他']
@@ -194,7 +182,7 @@ async def get_knowledge(category: str = Field(None, max_length=100), token: str 
 
 # クイズ取得
 @app.get("/api/quizzes")
-async def get_quizzes(category: str = Field(None, max_length=100), difficulty: str = Field(None, max_length=50), token: str = Depends(verify_api_key)):
+async def get_quizzes(category: str = Field(None, max_length=100), difficulty: str = Field(None, max_length=50)):
     valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他']
     valid_difficulties = ['easy', 'medium', 'hard']
 
@@ -213,14 +201,14 @@ async def get_quizzes(category: str = Field(None, max_length=100), difficulty: s
 
 # 避難所取得
 @app.get("/api/shelters")
-async def get_shelters(latitude: float = None, longitude: float = None, token: str = Depends(verify_api_key)):
+async def get_shelters(latitude: float = None, longitude: float = None):
     query = supabase.table("shelters").select("*")
     data = query.execute()
     return {"data": data.data}
 
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
-async def submit_quiz_answer(request: QuizAnswerRequest, token: str = Depends(verify_api_key)):
+async def submit_quiz_answer(request: QuizAnswerRequest):
     try:
         if DEBUG_MODE:
             logger.debug(f"Received validated request: {request.dict()}")
@@ -279,7 +267,7 @@ async def submit_quiz_answer(request: QuizAnswerRequest, token: str = Depends(ve
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_bousai_lab(category: str = Field(None, max_length=100), token: str = Depends(verify_api_key)):
+async def get_bousai_lab(category: str = Field(None, max_length=100)):
     try:
         if category:
             # カテゴリ値の基本検証
@@ -303,7 +291,7 @@ async def get_bousai_lab(category: str = Field(None, max_length=100), token: str
 
 # ユーザースコア取得
 @app.get("/api/user-scores/{session_id}")
-async def get_user_scores(session_id: str = Field(..., min_length=1, max_length=100), token: str = Depends(verify_api_key)):
+async def get_user_scores(session_id: str = Field(..., min_length=1, max_length=100)):
     try:
         scores = supabase.table("quiz_scores").select("*").eq("session_id", session_id).execute()
 
@@ -353,7 +341,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 # 近くの避難所を検索
 @app.post("/api/shelters/nearby")
-async def get_nearby_shelters(request: NearbySheltersRequest, token: str = Depends(verify_api_key)):
+async def get_nearby_shelters(request: NearbySheltersRequest):
     try:
         # 緊急避難所データを取得
         response = supabase.table("shelters").select("*").execute()
