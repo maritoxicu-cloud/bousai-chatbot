@@ -370,7 +370,12 @@ const ChatBot = () => {
         let quizzes = getFromCache('/api/quizzes', category);
         if (!quizzes) {
           const response = await apiClient.get(`/api/quizzes?category=${category}`);
+          console.log('Quiz API Response:', response.data);
           quizzes = response.data.data;
+          if (!Array.isArray(quizzes)) {
+            console.error('quizzes is not an array:', quizzes);
+            throw new Error('Invalid quiz response format');
+          }
           setCache('/api/quizzes', category, quizzes);
         }
         if (quizzes.length > 0) {
@@ -382,7 +387,12 @@ const ChatBot = () => {
         let knowledge_list = getFromCache('/api/knowledge', category);
         if (!knowledge_list) {
           const response = await apiClient.get(`/api/knowledge?category=${category}`);
+          console.log('Knowledge API Response:', response.data);
           knowledge_list = response.data.data;
+          if (!Array.isArray(knowledge_list)) {
+            console.error('knowledge_list is not an array:', knowledge_list);
+            throw new Error('Invalid knowledge response format');
+          }
           setCache('/api/knowledge', category, knowledge_list);
         }
         if (knowledge_list.length > 0) {
@@ -391,6 +401,7 @@ const ChatBot = () => {
         }
       }
     } catch (error) {
+      console.error('Category select error:', error);
       setMessages(prev => [...prev, {
         id: uuidv4(),
         text: getErrorMessage(error),
