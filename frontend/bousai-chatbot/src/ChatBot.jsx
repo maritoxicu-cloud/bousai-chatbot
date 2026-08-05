@@ -44,6 +44,33 @@ const ChatBot = () => {
   const [showSplash, setShowSplash] = useState(true);
   const [showShelterModal, setShowShelterModal] = useState(false);
 
+  // API キャッシング（5分間有効）
+  const cacheRef = useRef({});
+  const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+  const getCacheKey = (endpoint, category) => `${endpoint}:${category || 'all'}`;
+
+  const getFromCache = (endpoint, category) => {
+    const key = getCacheKey(endpoint, category);
+    const cached = cacheRef.current[key];
+    if (!cached) return null;
+
+    const now = Date.now();
+    if (now - cached.timestamp > CACHE_DURATION_MS) {
+      delete cacheRef.current[key];
+      return null;
+    }
+    return cached.data;
+  };
+
+  const setCache = (endpoint, category, data) => {
+    const key = getCacheKey(endpoint, category);
+    cacheRef.current[key] = {
+      data,
+      timestamp: Date.now()
+    };
+  };
+
   // スプラッシュスクリーン表示・自動進む（毎回表示）
   useEffect(() => {
     if (showSplash) {
@@ -340,16 +367,26 @@ const ChatBot = () => {
 
     try {
       if (selectedType === 'quiz') {
-        const response = await apiClient.get(`/api/quizzes?category=${category}`);
-        if (response.data.data.length > 0) {
-          const quiz = getRandomItem(response.data.data);
+        let quizzes = getFromCache('/api/quizzes', category);
+        if (!quizzes) {
+          const response = await apiClient.get(`/api/quizzes?category=${category}`);
+          quizzes = response.data.data;
+          setCache('/api/quizzes', category, quizzes);
+        }
+        if (quizzes.length > 0) {
+          const quiz = getRandomItem(quizzes);
           displayQuiz(quiz);
         }
       } else if (selectedType === 'knowledge') {
         setMode('knowledge');
-        const response = await apiClient.get(`/api/knowledge?category=${category}`);
-        if (response.data.data.length > 0) {
-          const knowledge = getRandomItem(response.data.data);
+        let knowledge_list = getFromCache('/api/knowledge', category);
+        if (!knowledge_list) {
+          const response = await apiClient.get(`/api/knowledge?category=${category}`);
+          knowledge_list = response.data.data;
+          setCache('/api/knowledge', category, knowledge_list);
+        }
+        if (knowledge_list.length > 0) {
+          const knowledge = getRandomItem(knowledge_list);
           displayKnowledge(knowledge);
         }
       }
@@ -370,20 +407,29 @@ const ChatBot = () => {
 
     try {
       if (selectedType === 'quiz') {
-        const response = await apiClient.get(`/api/quizzes?category=${currentCategory}`);
-        if (response.data.data.length > 0) {
-          const quiz = getRandomItem(response.data.data);
+        let quizzes = getFromCache('/api/quizzes', currentCategory);
+        if (!quizzes) {
+          const response = await apiClient.get(`/api/quizzes?category=${currentCategory}`);
+          quizzes = response.data.data;
+          setCache('/api/quizzes', currentCategory, quizzes);
+        }
+        if (quizzes.length > 0) {
+          const quiz = getRandomItem(quizzes);
           displayQuiz(quiz);
         }
       } else if (selectedType === 'knowledge') {
-        const response = await apiClient.get(`/api/knowledge?category=${currentCategory}`);
-        if (response.data.data.length > 0) {
-          const knowledge = getRandomItem(response.data.data);
+        let knowledge_list = getFromCache('/api/knowledge', currentCategory);
+        if (!knowledge_list) {
+          const response = await apiClient.get(`/api/knowledge?category=${currentCategory}`);
+          knowledge_list = response.data.data;
+          setCache('/api/knowledge', currentCategory, knowledge_list);
+        }
+        if (knowledge_list.length > 0) {
+          const knowledge = getRandomItem(knowledge_list);
           displayKnowledge(knowledge);
         }
       }
     } catch (error) {
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -452,12 +498,17 @@ const ChatBot = () => {
       setLoading(true);
 
       try {
-        const response = await apiClient.get(`/api/knowledge`, {
-          params: { category: detectedCategory }
-        });
+        let knowledge_list = getFromCache('/api/knowledge', detectedCategory);
+        if (!knowledge_list) {
+          const response = await apiClient.get(`/api/knowledge`, {
+            params: { category: detectedCategory }
+          });
+          knowledge_list = response.data.data;
+          setCache('/api/knowledge', detectedCategory, knowledge_list);
+        }
 
-        if (response.data.data && response.data.data.length > 0) {
-          setCurrentKnowledge(response.data.data);
+        if (knowledge_list && knowledge_list.length > 0) {
+          setCurrentKnowledge(knowledge_list);
           setMessages(prev => [...prev, {
             id: uuidv4(),
             text: `「${detectedCategory}」についての知識を表示します！`,
@@ -629,11 +680,17 @@ const ChatBot = () => {
 
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/police-tips`);
-      if (response.data.data && response.data.data.length > 0) {
+      let tips = getFromCache('/api/police-tips', 'all');
+      if (!tips) {
+        const response = await apiClient.get(`/api/police-tips`);
+        tips = response.data.data;
+        setCache('/api/police-tips', 'all', tips);
+      }
+
+      if (tips && tips.length > 0) {
         let bousaiLabList = '防災ラボ\n\n';
 
-        response.data.data.forEach((tip, idx) => {
+        tips.forEach((tip, idx) => {
           bousaiLabList += '【' + tip.category + '】\n';
           bousaiLabList += tip.title + '\n';
           bousaiLabList += tip.content + '\n';
