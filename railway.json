@@ -1,0 +1,7 @@
+{
+  "services": {
+    "bousai-chatbot": {
+      "root": "backend"
+    }
+  }
+}
