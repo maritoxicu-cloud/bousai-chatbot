@@ -63,7 +63,7 @@ const ChatBot = () => {
     sessionStorage.setItem('quiz_session_id', newSessionId);
     // リセット完了メッセージを表示
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: 'スコアがリセットされました。新しいセッションを開始しています。',
       sender: 'bot'
     }]);
@@ -192,7 +192,7 @@ const ChatBot = () => {
     setAnswered(false);
     setShowNavigation(false);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: `【${quiz.category}クイズ】\n\n${quiz.question}`,
       sender: 'bot',
       quiz: quiz,
@@ -309,7 +309,7 @@ const ChatBot = () => {
     setCurrentKnowledge(knowledge);
     setShowNavigation(false);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: `【${knowledge.category}】\n\n━━━━━━━━━━━━\n${knowledge.title}\n━━━━━━━━━━━━\n\n${knowledge.content}`,
       sender: 'bot',
       processAllContent: true  // contentのみrubyタグ処理フラグ
@@ -340,7 +340,7 @@ const ChatBot = () => {
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: uuidv4(),
         text: 'エラーが発生しました。',
         sender: 'bot'
       }]);
@@ -380,7 +380,7 @@ const ChatBot = () => {
     setShowNavigation(false);
     setMode('category_select');
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: selectedType === 'quiz' ? 'クイズのジャンルを選んでください！' : '防災知識のジャンルを選んでください！',
       sender: 'bot'
     }]);
@@ -391,7 +391,7 @@ const ChatBot = () => {
     setMode('category_select');
     setShowNavigation(false);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: 'クイズのジャンルを選んでください！',
       sender: 'bot'
     }]);
@@ -402,7 +402,7 @@ const ChatBot = () => {
     setMode('category_select');
     setShowNavigation(false);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: '防災知識のジャンルを選んでください！',
       sender: 'bot'
     }]);
@@ -444,13 +444,13 @@ const ChatBot = () => {
         if (response.data.data && response.data.data.length > 0) {
           setCurrentKnowledge(response.data.data);
           setMessages(prev => [...prev, {
-            id: prev.length + 1,
+            id: uuidv4(),
             text: `「${detectedCategory}」についての知識を表示します！`,
             sender: 'bot'
           }]);
         } else {
           setMessages(prev => [...prev, {
-            id: prev.length + 1,
+            id: uuidv4(),
             text: `申し訳ありません。「${detectedCategory}」の知識が見つかりませんでした。`,
             sender: 'bot'
           }]);
@@ -458,7 +458,7 @@ const ChatBot = () => {
       } catch (error) {
         console.error('Error fetching knowledge:', error);
         setMessages(prev => [...prev, {
-          id: prev.length + 1,
+          id: uuidv4(),
           text: '知識の取得に失敗しました。もう一度お試しください。',
           sender: 'bot'
         }]);
@@ -473,7 +473,7 @@ const ChatBot = () => {
     setCurrentQuiz(null);
     setCurrentKnowledge(null);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: '現在地を取得中...',
       sender: 'bot'
     }]);
@@ -484,7 +484,7 @@ const ChatBot = () => {
       // Geolocation API で現在地を取得
       if (!navigator.geolocation) {
         setMessages(prev => [...prev, {
-          id: prev.length + 1,
+          id: uuidv4(),
           text: 'お使いのブラウザは位置情報に対応していません。',
           sender: 'bot'
         }]);
@@ -539,7 +539,7 @@ const ChatBot = () => {
               shelterList += '【出典】国土地理院（hinanmap.gsi.go.jp）\n';
 
               const shelterMessage = {
-                id: Date.now(),
+                id: uuidv4(),
                 text: shelterList,
                 sender: 'bot',
                 isUrl: true,
@@ -555,7 +555,7 @@ const ChatBot = () => {
               setMessages(prev => [...prev, shelterMessage]);
             } else {
               setMessages(prev => [...prev, {
-                id: prev.length + 1,
+                id: uuidv4(),
                 text: '申し訳ありません。近くに避難所が見つかりませんでした。',
                 sender: 'bot'
               }]);
@@ -563,7 +563,7 @@ const ChatBot = () => {
           } catch (error) {
             console.error('API Error:', error);
             setMessages(prev => [...prev, {
-              id: prev.length + 1,
+              id: uuidv4(),
               text: '避難所の検索に失敗しました。',
               sender: 'bot'
             }]);
@@ -585,7 +585,7 @@ const ChatBot = () => {
           }
 
           setMessages(prev => [...prev, {
-            id: prev.length + 1,
+            id: uuidv4(),
             text: errorMessage,
             sender: 'bot'
           }]);
@@ -596,7 +596,7 @@ const ChatBot = () => {
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: uuidv4(),
         text: 'エラーが発生しました。',
         sender: 'bot'
       }]);
@@ -608,7 +608,7 @@ const ChatBot = () => {
     setCurrentQuiz(null);
     setCurrentKnowledge(null);
     setMessages(prev => [...prev, {
-      id: prev.length + 1,
+      id: uuidv4(),
       text: '防災ラボ呼び出し中...',
       sender: 'bot'
     }]);
@@ -643,7 +643,7 @@ const ChatBot = () => {
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: uuidv4(),
         text: '防災ラボの取得に失敗しました。',
         sender: 'bot'
       }]);
@@ -678,7 +678,7 @@ const ChatBot = () => {
         : `✖ ${message}`;
 
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: uuidv4(),
         text: resultText,
         sender: 'bot'
       }]);
@@ -687,7 +687,7 @@ const ChatBot = () => {
       if (currentQuiz.explanation) {
         setTimeout(() => {
           setMessages(prev => [...prev, {
-            id: prev.length + 1,
+            id: uuidv4(),
             text: '解説：\n' + currentQuiz.explanation,
             sender: 'bot',
             processAllContent: true
@@ -700,7 +700,7 @@ const ChatBot = () => {
     } catch (error) {
       console.error('Error submitting quiz answer:', error);
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: uuidv4(),
         text: 'エラーが発生しました。もう一度お試しください。',
         sender: 'bot'
       }]);
@@ -713,7 +713,7 @@ const ChatBot = () => {
 
     const sanitizedInput = DOMPurify.sanitize(input.trim(), { ALLOWED_TAGS: [] });
     const userInput = sanitizedInput.toLowerCase();
-    setMessages([...messages, { id: messages.length + 1, text: sanitizedInput, sender: 'user' }]);
+    setMessages([...messages, { id: uuidv4(), text: sanitizedInput, sender: 'user' }]);
     setInput('');
     setLoading(true);
 
@@ -732,7 +732,7 @@ const ChatBot = () => {
         await handlePoliceTipsSelect();
       } else {
         setMessages(prev => [...prev, {
-          id: prev.length + 1,
+          id: uuidv4(),
           text: 'クイズ、防災知識、避難所検索、便利技のいずれかを選んでください！',
           sender: 'bot'
         }]);
