@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from starlette.requests import Request as StarletteRequest
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from supabase import create_client, Client
@@ -49,12 +49,16 @@ if DEBUG_MODE:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # 認証関数
-security = HTTPBearer()
-
-async def verify_api_key(credentials: HTTPAuthCredentials = Depends(security)):
-    if credentials.credentials != API_KEY:
+async def verify_api_key(request: Request):
+    auth_header = request.headers.get("authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="無効な API キーです")
-    return credentials.credentials
+
+    token = auth_header.replace("Bearer ", "")
+    if token != API_KEY:
+        raise HTTPException(status_code=401, detail="無効な API キーです")
+
+    return token
 
 # レート制限用ミドルウェア
 class RateLimitMiddleware(BaseHTTPMiddleware):
