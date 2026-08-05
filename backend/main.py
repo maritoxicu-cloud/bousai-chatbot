@@ -47,14 +47,6 @@ if DEBUG_MODE:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# 認証関数
-security = HTTPBearer()
-
-async def verify_api_key(credentials: HTTPAuthCredentials = Depends(security)):
-    if credentials.credentials != API_KEY:
-        raise HTTPException(status_code=401, detail="無効な API キーです")
-    return credentials.credentials
-
 # レート制限用ミドルウェア
 class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, requests_per_minute: int = 100):
