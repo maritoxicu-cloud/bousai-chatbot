@@ -175,7 +175,13 @@ async def health():
 
 # 防災知識取得
 @app.get("/api/knowledge")
-async def get_knowledge(category: str = None, token: str = Depends(verify_api_key)):
+async def get_knowledge(category: str = Field(None, max_length=100), token: str = Depends(verify_api_key)):
+    if category:
+        # カテゴリ値の基本検証（許可されたカテゴリのみ）
+        valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他']
+        if category not in valid_categories:
+            raise HTTPException(status_code=400, detail=f"無効なカテゴリです: {category}")
+
     query = supabase.table("knowledge").select("*")
     if category:
         query = query.eq("category", category)
@@ -184,7 +190,15 @@ async def get_knowledge(category: str = None, token: str = Depends(verify_api_ke
 
 # クイズ取得
 @app.get("/api/quizzes")
-async def get_quizzes(category: str = None, difficulty: str = None, token: str = Depends(verify_api_key)):
+async def get_quizzes(category: str = Field(None, max_length=100), difficulty: str = Field(None, max_length=50), token: str = Depends(verify_api_key)):
+    valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他']
+    valid_difficulties = ['easy', 'medium', 'hard']
+
+    if category and category not in valid_categories:
+        raise HTTPException(status_code=400, detail=f"無効なカテゴリです: {category}")
+    if difficulty and difficulty not in valid_difficulties:
+        raise HTTPException(status_code=400, detail=f"無効な難易度です: {difficulty}")
+
     query = supabase.table("quizzes").select("*")
     if category:
         query = query.eq("category", category)
@@ -261,8 +275,14 @@ async def submit_quiz_answer(request: QuizAnswerRequest, token: str = Depends(ve
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_bousai_lab(category: str = None, token: str = Depends(verify_api_key)):
+async def get_bousai_lab(category: str = Field(None, max_length=100), token: str = Depends(verify_api_key)):
     try:
+        if category:
+            # カテゴリ値の基本検証
+            valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他']
+            if category not in valid_categories:
+                raise HTTPException(status_code=400, detail=f"無効なカテゴリです: {category}")
+
         query = supabase.table("bousai_lab").select("*")
         if category:
             query = query.eq("category", category)
@@ -279,7 +299,7 @@ async def get_bousai_lab(category: str = None, token: str = Depends(verify_api_k
 
 # ユーザースコア取得
 @app.get("/api/user-scores/{session_id}")
-async def get_user_scores(session_id: str, token: str = Depends(verify_api_key)):
+async def get_user_scores(session_id: str = Field(..., min_length=1, max_length=100), token: str = Depends(verify_api_key)):
     try:
         scores = supabase.table("quiz_scores").select("*").eq("session_id", session_id).execute()
 
