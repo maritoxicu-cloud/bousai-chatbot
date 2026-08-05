@@ -7,6 +7,15 @@ import './ChatBot.css';
 // FINAL CACHE CLEAR: 2026-08-04 20:30:00
 // This forces Vercel to rebuild with the latest condition check logic
 const API_BASE_URL = 'https://bousai-chatbot-production.up.railway.app';
+const API_KEY = 'bousai-api-key-prod-2024';
+
+// Axios インスタンス（認証ヘッダー付き）
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Authorization': `Bearer ${API_KEY}`
+  }
+});
 
 const ChatBot = () => {
   // Force rebuild: 2026-08-04 v3.0 FINAL
@@ -315,14 +324,14 @@ const ChatBot = () => {
 
     try {
       if (selectedType === 'quiz') {
-        const response = await axios.get(`${API_BASE_URL}/api/quizzes?category=${category}`);
+        const response = await apiClient.get(`/api/quizzes?category=${category}`);
         if (response.data.data.length > 0) {
           const quiz = getRandomItem(response.data.data);
           displayQuiz(quiz);
         }
       } else if (selectedType === 'knowledge') {
         setMode('knowledge');
-        const response = await axios.get(`${API_BASE_URL}/api/knowledge?category=${category}`);
+        const response = await apiClient.get(`/api/knowledge?category=${category}`);
         if (response.data.data.length > 0) {
           const knowledge = getRandomItem(response.data.data);
           displayKnowledge(knowledge);
@@ -346,13 +355,13 @@ const ChatBot = () => {
 
     try {
       if (selectedType === 'quiz') {
-        const response = await axios.get(`${API_BASE_URL}/api/quizzes?category=${currentCategory}`);
+        const response = await apiClient.get(`/api/quizzes?category=${currentCategory}`);
         if (response.data.data.length > 0) {
           const quiz = getRandomItem(response.data.data);
           displayQuiz(quiz);
         }
       } else if (selectedType === 'knowledge') {
-        const response = await axios.get(`${API_BASE_URL}/api/knowledge?category=${currentCategory}`);
+        const response = await apiClient.get(`/api/knowledge?category=${currentCategory}`);
         if (response.data.data.length > 0) {
           const knowledge = getRandomItem(response.data.data);
           displayKnowledge(knowledge);
@@ -428,7 +437,7 @@ const ChatBot = () => {
       setLoading(true);
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/knowledge`, {
+        const response = await apiClient.get(`/api/knowledge`, {
           params: { category: detectedCategory }
         });
 
@@ -489,7 +498,7 @@ const ChatBot = () => {
 
           try {
             // バックエンドに位置情報を送信
-            const response = await axios.post(`${API_BASE_URL}/api/shelters/nearby`, {
+            const response = await apiClient.post(`/api/shelters/nearby`, {
               latitude,
               longitude,
               max_distance: 5,  // 5km以内
@@ -606,7 +615,7 @@ const ChatBot = () => {
 
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/police-tips`);
+      const response = await apiClient.get(`/api/police-tips`);
       if (response.data.data && response.data.data.length > 0) {
         let bousaiLabList = '防災ラボ\n\n';
 
@@ -648,7 +657,7 @@ const ChatBot = () => {
 
     try {
       // 本来のエンドポイントに送信（quiz_idを文字列に変換）
-      const response = await axios.post(`${API_BASE_URL}/api/quiz-answer`, {
+      const response = await apiClient.post(`/api/quiz-answer`, {
         session_id: sessionId,
         quiz_id: String(currentQuiz.id),
         user_answer: selectedAnswer,

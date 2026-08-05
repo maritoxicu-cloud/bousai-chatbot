@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthCredentials
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from supabase import create_client, Client
@@ -34,6 +35,9 @@ ALLOWED_ORIGINS = os.getenv(
 # デバッグモード（本番環境では False）
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
+# API キー（認証用）
+API_KEY = os.getenv("API_KEY", "bousai-api-key-prod-2024")
+
 # 環境変数が設定されていない場合はエラー
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("SUPABASE_URL and SUPABASE_KEY environment variables must be set")
@@ -43,6 +47,14 @@ if DEBUG_MODE:
     logger.debug(f"SUPABASE_KEY is set: {bool(SUPABASE_KEY)}")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# 認証関数
+security = HTTPBearer()
+
+async def verify_api_key(credentials: HTTPAuthCredentials = Depends(security)):
+    if credentials.credentials != API_KEY:
+        raise HTTPException(status_code=401, detail="無効な API キーです")
+    return credentials.credentials
 
 # レート制限用ミドルウェア
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -63,9 +75,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # リクエスト数が制限を超えているかチェック
         if len(self.request_history[client_ip]) >= self.requests_per_minute:
-            return JSONResponse(
+            raise HTTPException(
                 status_code=429,
-                content={"detail": "リクエストが多すぎます。しばらく待ってから再度お試しください。"}
+                detail="リクエストが多すぎます。しばらく待ってから再度お試しください。"
             )
 
         # リクエストを記録
@@ -145,6 +157,17 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
             content={"detail": "リクエスト形式が正しくありません"}
         )
 
+# HTTPException のカスタムハンドラー（エラーレスポンス統一）
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    response_content = {"detail": exc.detail}
+    if DEBUG_MODE and exc.status_code >= 500:
+        response_content["error_type"] = exc.__class__.__name__
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=response_content
+    )
+
 # ヘルスチェック
 @app.get("/health")
 async def health():
@@ -152,7 +175,7 @@ async def health():
 
 # 防災知識取得
 @app.get("/api/knowledge")
-async def get_knowledge(category: str = None):
+async def get_knowledge(category: str = None, token: str = Depends(verify_api_key)):
     query = supabase.table("knowledge").select("*")
     if category:
         query = query.eq("category", category)
@@ -161,7 +184,7 @@ async def get_knowledge(category: str = None):
 
 # クイズ取得
 @app.get("/api/quizzes")
-async def get_quizzes(category: str = None, difficulty: str = None):
+async def get_quizzes(category: str = None, difficulty: str = None, token: str = Depends(verify_api_key)):
     query = supabase.table("quizzes").select("*")
     if category:
         query = query.eq("category", category)
@@ -172,14 +195,14 @@ async def get_quizzes(category: str = None, difficulty: str = None):
 
 # 避難所取得
 @app.get("/api/shelters")
-async def get_shelters(latitude: float = None, longitude: float = None):
+async def get_shelters(latitude: float = None, longitude: float = None, token: str = Depends(verify_api_key)):
     query = supabase.table("shelters").select("*")
     data = query.execute()
     return {"data": data.data}
 
 # クイズ回答を記録
 @app.post("/api/quiz-answer", response_model=QuizAnswerResponse)
-async def submit_quiz_answer(request: QuizAnswerRequest):
+async def submit_quiz_answer(request: QuizAnswerRequest, token: str = Depends(verify_api_key)):
     try:
         if DEBUG_MODE:
             logger.debug(f"Received validated request: {request.dict()}")
@@ -238,7 +261,7 @@ async def submit_quiz_answer(request: QuizAnswerRequest):
 
 # 防災ラボ取得
 @app.get("/api/police-tips")
-async def get_bousai_lab(category: str = None):
+async def get_bousai_lab(category: str = None, token: str = Depends(verify_api_key)):
     try:
         query = supabase.table("bousai_lab").select("*")
         if category:
@@ -249,14 +272,14 @@ async def get_bousai_lab(category: str = None):
     except Exception as e:
         if DEBUG_MODE:
             logger.error(f"Exception: {str(e)}")
-            return {"data": [], "error": str(e)}
+            raise HTTPException(status_code=500, detail=f"防災ラボの取得に失敗しました: {str(e)}")
         else:
             logger.error(f"Exception: {str(e)}")
-            return {"data": []}
+            raise HTTPException(status_code=500, detail="防災ラボの取得に失敗しました")
 
 # ユーザースコア取得
 @app.get("/api/user-scores/{session_id}")
-async def get_user_scores(session_id: str):
+async def get_user_scores(session_id: str, token: str = Depends(verify_api_key)):
     try:
         scores = supabase.table("quiz_scores").select("*").eq("session_id", session_id).execute()
 
@@ -306,7 +329,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 # 近くの避難所を検索
 @app.post("/api/shelters/nearby")
-async def get_nearby_shelters(request: NearbySheltersRequest):
+async def get_nearby_shelters(request: NearbySheltersRequest, token: str = Depends(verify_api_key)):
     try:
         # 緊急避難所データを取得
         response = supabase.table("shelters").select("*").execute()
