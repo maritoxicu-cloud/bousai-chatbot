@@ -571,13 +571,14 @@ const ChatBot = () => {
               limit: 10  // 最大10件
             });
 
-            if (response.data.data.length > 0) {
-              // 避難所リストをまとめて表示
-              const shelterType = response.data.data[0]?.shelter_type || '緊急';
-              const shelterTypeLabel = shelterType === '緊急' ? '緊急避難所' : '指定避難所';
-              let shelterList = '📍 現在地から ' + response.data.count + ' 件の' + shelterTypeLabel + 'が見つかりました!\n\n';
+            // 緊急避難所のみをフィルタリング
+            const emergencyShelters = response.data.data.filter(shelter => shelter.shelter_type === '緊急');
 
-              response.data.data.forEach((shelter, idx) => {
+            if (emergencyShelters.length > 0) {
+              // 避難所リストをまとめて表示
+              let shelterList = '📍 現在地から ' + emergencyShelters.length + ' 件の緊急避難所が見つかりました!\n\n';
+
+              emergencyShelters.forEach((shelter, idx) => {
                 let eq, ts, fl, ht, ls, pet;
                 eq = shelter['地震'] ? '○' : '❌';
                 ts = shelter['津波'] ? '○' : '❌';
@@ -587,14 +588,10 @@ const ChatBot = () => {
                 pet = shelter['ペット対応'] ? '○' : '❌';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
-                const typeLabel = shelter.shelter_type === '緊急' ? '' : ' （指定避難所）';
-
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
-                shelterList += shelter['施設・場所名'] + typeLabel + ' ℹ️\n';
+                shelterList += shelter['施設・場所名'] + ' ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
-                if (shelter.shelter_type !== '指定') {
-                  shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
-                }
+                shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
               });
 
@@ -622,7 +619,7 @@ const ChatBot = () => {
             } else {
               setMessages(prev => [...prev, {
                 id: uuidv4(),
-                text: '申し訳ありません。近くに避難所が見つかりませんでした。',
+                text: '近くに避難所が見つかりませんでした。',
                 sender: 'bot'
               }]);
             }
