@@ -6,7 +6,9 @@ import './ChatBot.css';
 
 // FINAL CACHE CLEAR: 2026-08-04 20:30:00
 // This forces Vercel to rebuild with the latest condition check logic
-const API_BASE_URL = 'https://bousai-chatbot-production.up.railway.app';
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8001'
+  : 'https://bousai-chatbot-production.up.railway.app';
 const API_KEY = 'bousai-api-key-prod-2024';
 
 // Axios インスタンス（認証ヘッダー付き）
@@ -585,11 +587,11 @@ const ChatBot = () => {
                 fl = shelter['洪水'] ? '○' : '❌';
                 ht = shelter['高潮'] ? '○' : '❌';
                 ls = shelter['崖崩れ、土石流及び地滑り'] ? '○' : '❌';
-                pet = shelter['ペット対応'] ? '○' : '❌';
+                pet = shelter['ペット対応'] ? '○' : '✕';
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
-                shelterList += shelter['施設・場所名'] + ' ℹ️\n';
+                shelterList += shelter['施設・場所名'] + '（緊急）ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
                 shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
@@ -617,11 +619,48 @@ const ChatBot = () => {
 
               setMessages(prev => [...prev, shelterMessage]);
             } else {
-              setMessages(prev => [...prev, {
-                id: uuidv4(),
-                text: '近くに避難所が見つかりませんでした。',
-                sender: 'bot'
-              }]);
+              // 指定避難所をフィルタリング
+              const designatedShelters = response.data.data.filter(shelter => shelter.shelter_type === '指定');
+
+              if (designatedShelters.length > 0) {
+                // 指定避難所リストをまとめて表示
+                let shelterList = '📍 現在地から ' + designatedShelters.length + ' 件の指定避難所が見つかりました!\n\n';
+
+                designatedShelters.forEach((shelter, idx) => {
+                  const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
+
+                  shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
+                  shelterList += shelter['施設・場所名'] + '（指定）ℹ️\n';
+                  shelterList += shelter['住所'] + '\n';
+                  shelterList += '地図：\n' + mapsUrl + '\n\n';
+                });
+
+                shelterList += '\n【注意事項】\n';
+                shelterList += '・指定避難所の情報は随時更新中です。\n';
+                shelterList += '・避難所情報は変更される可能性があります。最新情報は各自治体にお問い合わせください。\n';
+                shelterList += '【出典】国土地理院 (hinanmap.gsi.go.jp)\n';
+
+                const shelterMessage = {
+                  id: uuidv4(),
+                  text: shelterList,
+                  sender: 'bot',
+                  isUrl: true,
+                  isShelterInfo: true
+                };
+
+                sessionStorage.setItem('shelterState', JSON.stringify({
+                  message: shelterMessage,
+                  currentPosition: { latitude, longitude }
+                }));
+
+                setMessages(prev => [...prev, shelterMessage]);
+              } else {
+                setMessages(prev => [...prev, {
+                  id: uuidv4(),
+                  text: '近くに避難所が見つかりませんでした。',
+                  sender: 'bot'
+                }]);
+              }
             }
           } catch (error) {
             console.error('API Error:', error);
