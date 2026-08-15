@@ -34,6 +34,7 @@ const ChatBot = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const [sessionId, setSessionId] = useState(() => {
     let id = sessionStorage.getItem('quiz_session_id');
     if (!id) {
@@ -116,28 +117,32 @@ const ChatBot = () => {
 
       while (i < line.length) {
         const openParen = line.indexOf('(', i);
+        const openParenZen = line.indexOf('（', i);
+        const nextOpen = openParen === -1 ? openParenZen : (openParenZen === -1 ? openParen : Math.min(openParen, openParenZen));
 
-        if (openParen === -1) {
+        if (nextOpen === -1) {
           const remaining = line.substring(i);
           if (remaining) result.push(remaining);
           break;
         }
 
-        const closeParen = line.indexOf(')', openParen);
+        const isZenParen = line[nextOpen] === '（';
+        const closeParenChar = isZenParen ? '）' : ')';
+        const closeParen = line.indexOf(closeParenChar, nextOpen);
         if (closeParen === -1) {
           const remaining = line.substring(i);
           if (remaining) result.push(remaining);
           break;
         }
 
-        const ruby = line.substring(openParen + 1, closeParen);
-        let j = openParen - 1;
+        const ruby = line.substring(nextOpen + 1, closeParen);
+        let j = nextOpen - 1;
         while (j >= 0 && /[一-鿿]/.test(line[j])) {
           j--;
         }
         j++;
 
-        const kanji = line.substring(j, openParen);
+        const kanji = line.substring(j, nextOpen);
 
         if (kanji && /^[ぁ-ん]+$/.test(ruby)) {
           const beforeText = line.substring(i, j);
@@ -147,8 +152,8 @@ const ChatBot = () => {
           );
           i = closeParen + 1;
         } else {
-          result.push(line.substring(i, openParen + 1));
-          i = openParen + 1;
+          result.push(line.substring(i, nextOpen + 1));
+          i = nextOpen + 1;
         }
       }
       return result;
@@ -194,12 +199,14 @@ const ChatBot = () => {
     'その他': '❓'
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToTop = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = 0;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToTop();
   }, [messages]);
 
   // ページロード時に SessionStorage から避難所情報と防災ラボ情報を復元
@@ -301,27 +308,32 @@ const ChatBot = () => {
 
       while (i < line.length) {
         const openParen = line.indexOf('(', i);
-        if (openParen === -1) {
+        const openParenZen = line.indexOf('（', i);
+        const nextOpen = openParen === -1 ? openParenZen : (openParenZen === -1 ? openParen : Math.min(openParen, openParenZen));
+
+        if (nextOpen === -1) {
           const remaining = line.substring(i);
           if (remaining) result.push(remaining);
           break;
         }
 
-        const closeParen = line.indexOf(')', openParen);
+        const isZenParen = line[nextOpen] === '（';
+        const closeParenChar = isZenParen ? '）' : ')';
+        const closeParen = line.indexOf(closeParenChar, nextOpen);
         if (closeParen === -1) {
           const remaining = line.substring(i);
           if (remaining) result.push(remaining);
           break;
         }
 
-        const ruby = line.substring(openParen + 1, closeParen);
-        let j = openParen - 1;
+        const ruby = line.substring(nextOpen + 1, closeParen);
+        let j = nextOpen - 1;
         while (j >= 0 && /[一-鿿]/.test(line[j])) {
           j--;
         }
         j++;
 
-        const kanji = line.substring(j, openParen);
+        const kanji = line.substring(j, nextOpen);
 
         if (kanji && /^[ぁ-ん]+$/.test(ruby)) {
           const beforeText = line.substring(i, j);
@@ -331,8 +343,8 @@ const ChatBot = () => {
           );
           i = closeParen + 1;
         } else {
-          result.push(line.substring(i, openParen + 1));
-          i = openParen + 1;
+          result.push(line.substring(i, nextOpen + 1));
+          i = nextOpen + 1;
         }
       }
       return result;
@@ -904,7 +916,7 @@ const ChatBot = () => {
         </div>
       </div>
 
-      <div className="messages-container">
+      <div className="messages-container" ref={messagesContainerRef}>
         {messages.map((msg, idx) => (
           <div key={msg.id}>
             <div className={`message ${msg.sender}`}>
