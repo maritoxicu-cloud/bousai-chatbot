@@ -34,7 +34,6 @@ const ChatBot = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const messagesEndRef = useRef(null);
-  const messagesContainerRef = useRef(null);
   const [sessionId, setSessionId] = useState(() => {
     let id = sessionStorage.getItem('quiz_session_id');
     if (!id) {
@@ -199,14 +198,14 @@ const ChatBot = () => {
     'その他': '❓'
   };
 
-  const scrollToTop = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = 0;
+  const scrollToNewMessage = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   useEffect(() => {
-    scrollToTop();
+    scrollToNewMessage();
   }, [messages]);
 
   // ページロード時に SessionStorage から避難所情報と防災ラボ情報を復元
@@ -916,7 +915,7 @@ const ChatBot = () => {
         </div>
       </div>
 
-      <div className="messages-container" ref={messagesContainerRef}>
+      <div className="messages-container">
         {messages.map((msg, idx) => (
           <div key={msg.id}>
             <div className={`message ${msg.sender}`}>
