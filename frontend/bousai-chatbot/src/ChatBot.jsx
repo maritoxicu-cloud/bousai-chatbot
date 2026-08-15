@@ -34,6 +34,7 @@ const ChatBot = () => {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [showNavigation, setShowNavigation] = useState(false);
   const messagesEndRef = useRef(null);
+  const previousMessagesLengthRef = useRef(0);
   const [sessionId, setSessionId] = useState(() => {
     let id = sessionStorage.getItem('quiz_session_id');
     if (!id) {
@@ -199,14 +200,103 @@ const ChatBot = () => {
   };
 
   const scrollToNewMessage = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // 修正案4B：修正案2 + requestAnimationFrame（DOM完全レンダリング後）
+    requestAnimationFrame(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer && messagesContainer.lastElementChild) {
+        messagesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // 修正案6：メッセージの最初の子要素にスクロール（複雑なメッセージでも先頭で止まる）
+    // requestAnimationFrame(() => {
+    //   const messagesContainer = document.querySelector('.messages-container');
+    //   if (messagesContainer) {
+    //     const lastMessage = messagesContainer.querySelector('.message:last-of-type');
+    //     if (lastMessage && lastMessage.firstElementChild) {
+    //       lastMessage.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    //     }
+    //   }
+    // });
+
+    // 修正案5：setTimeout で遅延計算（メッセージ完全レンダリング後に offsetTop を正確に取得）
+    // setTimeout(() => {
+    //   const messagesContainer = document.querySelector('.messages-container');
+    //   if (messagesContainer) {
+    //     const lastMessage = messagesContainer.querySelector('.message:last-of-type');
+    //     if (lastMessage) {
+    //       const messageTop = lastMessage.offsetTop;
+    //       messagesContainer.scrollTo({
+    //         top: messageTop,
+    //         behavior: 'smooth'
+    //       });
+    //     }
+    //   }
+    // }, 100);
+
+    // 修正案4C：修正案2改（メッセージ全体にスクロール）+ requestAnimationFrame（DOM完全レンダリング後）
+    // requestAnimationFrame(() => {
+    //   const messagesContainer = document.querySelector('.messages-container');
+    //   if (messagesContainer) {
+    //     const lastMessage = messagesContainer.querySelector('.message:last-of-type');
+    //     if (lastMessage) {
+    //       lastMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    //     }
+    //   }
+    // });
+
+    // 修正案4：requestAnimationFrame でDOM完全レンダリング後にスクロール
+    // requestAnimationFrame(() => {
+    //   const messagesContainer = document.querySelector('.messages-container');
+    //   if (messagesContainer) {
+    //     const lastMessage = messagesContainer.querySelector('.message:last-of-type');
+    //     if (lastMessage) {
+    //       const messageTop = lastMessage.offsetTop;
+    //       messagesContainer.scrollTo({
+    //         top: messageTop,
+    //         behavior: 'smooth'
+    //       });
+    //     }
+    //   }
+    // });
+
+    // 修正案3：メッセージの先頭ちょうどにスクロール位置を固定
+    // const messagesContainer = document.querySelector('.messages-container');
+    // if (messagesContainer) {
+    //   const lastMessage = messagesContainer.querySelector('.message:last-of-type');
+    //   if (lastMessage) {
+    //     const messageTop = lastMessage.offsetTop;
+    //     messagesContainer.scrollTo({
+    //       top: messageTop,
+    //       behavior: 'smooth'
+    //     });
+    //   }
+    // }
+
+    // 修正案2：新しいメッセージの先頭にスクロール（複雑なメッセージだと最後まで行く）
+    // const messagesContainer = document.querySelector('.messages-container');
+    // if (messagesContainer && messagesContainer.lastElementChild) {
+    //   messagesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // }
+
+    // 元の動作（最後の参照点にスクロール）
+    // if (messagesEndRef.current) {
+    //   messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // }
   };
 
   useEffect(() => {
-    scrollToNewMessage();
+    // 新しいメッセージが追加されたときだけスクロール
+    if (messages.length > previousMessagesLengthRef.current) {
+      scrollToNewMessage();
+    }
+    previousMessagesLengthRef.current = messages.length;
   }, [messages]);
+
+  // 修正前：メッセージが変わるたびにスクロール実行（常にスクロール）
+  // useEffect(() => {
+  //   scrollToNewMessage();
+  // }, [messages]);
 
   // ページロード時に SessionStorage から避難所情報と防災ラボ情報を復元
   useEffect(() => {
