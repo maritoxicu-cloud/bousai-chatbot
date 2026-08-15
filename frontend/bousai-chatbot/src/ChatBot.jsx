@@ -799,7 +799,8 @@ const ChatBot = () => {
       setMessages(prev => [...prev, {
         id: uuidv4(),
         text: resultText,
-        sender: 'bot'
+        sender: 'bot',
+        processAllContent: true
       }]);
 
       // 解説を表示
