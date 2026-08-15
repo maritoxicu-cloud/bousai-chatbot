@@ -962,8 +962,7 @@ const ChatBot = () => {
             <img src={`${process.env.PUBLIC_URL}/icon-512.png`} alt="防災コンシェルジュ" />
           </div>
           <div className="splash-message">
-            <p>防災は『正解』が</p>
-            <p>ひとつではありません。</p>
+            <p>防災は『正解』が<br />ひとつではありません。</p>
             <p>学んだ知識を基に、あなたの環境・状況に合わせた対策を考えてみてください。</p>
           </div>
         </div>
