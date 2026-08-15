@@ -591,7 +591,7 @@ const ChatBot = () => {
                 const mapsUrl = 'https://www.google.com/maps/dir/' + latitude + ',' + longitude + '/' + shelter['緯度'] + ',' + shelter['経度'];
 
                 shelterList += '【' + (idx + 1) + '】【距離:' + shelter.distance + 'km】\n';
-                shelterList += shelter['施設・場所名'] + '（緊急）ℹ️\n';
+                shelterList += shelter['施設・場所名'] + '「緊急」ℹ️\n';
                 shelterList += shelter['住所'] + '\n';
                 shelterList += '対応:地震' + eq + ' 津波' + ts + ' 洪水' + fl + ' 高潮' + ht + ' 土砂' + ls + ' ペット' + pet + '\n';
                 shelterList += '地図：\n' + mapsUrl + '\n\n';
@@ -600,6 +600,7 @@ const ChatBot = () => {
               // 注意書きと出典情報を追加
               shelterList += '\n【注意】\n';
               shelterList += '・ペット対応情報は随時更新中です。対応の有無は各施設に直接ご確認ください。\n';
+              shelterList += '・避難所までの道では通れない箇所や危険な箇所が生じていることがあります。避難行動の際は十分ご注意ください。\n';
               shelterList += '・避難所情報は変更される可能性があります。最新情報は各施設にお問い合わせください。\n';
               shelterList += '【出典】国土地理院（hinanmap.gsi.go.jp）\n';
 
@@ -636,7 +637,7 @@ const ChatBot = () => {
                 });
 
                 shelterList += '\n【注意事項】\n';
-                shelterList += '・指定避難所の情報は随時更新中です。\n';
+                shelterList += '・避難所までの道では通れない箇所や危険な箇所が生じていることがあります。避難行動の際は十分ご注意ください。\n';
                 shelterList += '・避難所情報は変更される可能性があります。最新情報は各自治体にお問い合わせください。\n';
                 shelterList += '【出典】国土地理院 (hinanmap.gsi.go.jp)\n';
 
@@ -1008,9 +1009,9 @@ const ChatBot = () => {
             <button className="modal-close" onClick={() => setShowShelterModal(false)}>✕</button>
             <h3>避難所について</h3>
             <div className="modal-content">
-              <p><strong>🔹指定緊急避難所</strong></p>
+              <p><strong>🔹指定「緊急」避難所</strong></p>
               <p>命を守るための一時的避難場所</p>
-              <p style={{ marginTop: '16px' }}><strong>🔹指定避難所</strong></p>
+              <p style={{ marginTop: '16px' }}><strong>🔹（指定）避難所</strong></p>
               <p>災害後に生活するための施設</p>
             </div>
           </div>
