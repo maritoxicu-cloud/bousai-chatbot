@@ -56,3 +56,4 @@ yarn-error.log*
 .eslintcache
 
 .vercel
+frontend/bousai-chatbot/public/api/ 

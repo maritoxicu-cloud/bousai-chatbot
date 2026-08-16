@@ -7,7 +7,7 @@ import './ChatBot.css';
 // FINAL CACHE CLEAR: 2026-08-04 20:30:00
 // This forces Vercel to rebuild with the latest condition check logic
 const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8001'
+  ? 'http://localhost:3001'
   : 'https://bousai-chatbot-production.up.railway.app';
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -667,11 +667,14 @@ const ChatBot = () => {
 
           try {
             // バックエンドに位置情報を送信
-            const response = await apiClient.post(`/api/shelters/nearby`, {
-              latitude,
-              longitude,
-              max_distance: 5,  // 5km以内
-              limit: 10  // 最大10件
+            const response = await apiClient.post('/api/proxy', {
+              endpoint: '/api/shelters/nearby',
+              data: {
+                latitude,
+                longitude,
+                max_distance: 5,
+                limit: 10
+              }
             });
 
             // 緊急避難所のみをフィルタリング
@@ -866,11 +869,14 @@ const ChatBot = () => {
 
     try {
       // 本来のエンドポイントに送信（quiz_idを文字列に変換）
-      const response = await apiClient.post(`/api/quiz-answer`, {
-        session_id: sessionId,
-        quiz_id: String(currentQuiz.id),
-        user_answer: selectedAnswer,
-        category: currentQuiz.category
+      const response = await apiClient.post('/api/proxy', {
+        endpoint: '/api/quiz-answer',
+        data: {
+          session_id: sessionId,
+          quiz_id: String(currentQuiz.id),
+          user_answer: selectedAnswer,
+          category: currentQuiz.category
+        }
       });
 
       const { is_correct, message } = response.data;
