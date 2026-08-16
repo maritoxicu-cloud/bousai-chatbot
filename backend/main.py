@@ -439,6 +439,44 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
+# プロキシエンドポイント（API キー認証付き）
+@app.post("/api/proxy")
+async def api_proxy(request: Request):
+    try:
+        # Authorization ヘッダーから API キーを取得
+        auth_header = request.headers.get("Authorization", "")
+        provided_key = auth_header.replace("Bearer ", "").strip()
+
+        # API キーをチェック
+        if provided_key != API_KEY:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+
+        # リクエストボディからエンドポイントとデータを取得
+        body = await request.json()
+        endpoint = body.get("endpoint")
+        data = body.get("data", {})
+
+        if not endpoint:
+            raise HTTPException(status_code=400, detail="Endpoint is required")
+
+        # 対応するエンドポイントを呼び出す
+        if endpoint == "/api/quiz-answer":
+            return await submit_quiz_answer(QuizAnswerRequest(**data))
+        elif endpoint == "/api/shelters/nearby":
+            return await get_nearby_shelters(NearbySheltersRequest(**data))
+        else:
+            raise HTTPException(status_code=404, detail=f"Endpoint {endpoint} not found")
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        if DEBUG_MODE:
+            logger.error(f"Proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Proxy error: {str(e)}")
+        else:
+            logger.error(f"Proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Proxy error")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

@@ -8,7 +8,7 @@ import './ChatBot.css';
 // This forces Vercel to rebuild with the latest condition check logic
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3001'
-  : 'https://bousai-chatbot-production.up.railway.app';
+  : window.location.origin; // Vercel プロキシ経由
 const API_KEY = process.env.REACT_APP_API_KEY;
 
 // Axios インスタンス（認証ヘッダー付き）
