@@ -486,9 +486,19 @@ async def proxy(request: Request):
             return {"data": data.data}
 
         elif endpoint == "/shelters":
-            query = supabase.table("shelters").select("*")
-            data = query.execute()
-            return {"data": data.data}
+            latitude = params.get("latitude")
+            longitude = params.get("longitude")
+            max_distance = params.get("max_distance", 5)
+            limit = params.get("limit", 10)
+
+            nearby_shelters_request = NearbySheltersRequest(
+                latitude=latitude,
+                longitude=longitude,
+                max_distance=max_distance,
+                limit=limit
+            )
+
+            return await get_nearby_shelters(nearby_shelters_request)
 
         elif endpoint == "/police-tips":
             category = params.get("category")
