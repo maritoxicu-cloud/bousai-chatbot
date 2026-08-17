@@ -9,14 +9,10 @@ import './ChatBot.css';
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:8001'
   : 'https://bousai-chatbot-production.up.railway.app';
-const API_KEY = process.env.REACT_APP_API_KEY;
 
-// Axios インスタンス（認証ヘッダー付き）
+// Axios インスタンス（API キーはバックエンドプロキシで隠蔽）
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Authorization': `Bearer ${API_KEY}`
-  }
+  baseURL: API_BASE_URL
 });
 
 const ChatBot = () => {
@@ -472,7 +468,10 @@ const ChatBot = () => {
       if (selectedType === 'quiz') {
         let quizzes = getFromCache('/api/quizzes', category);
         if (!quizzes) {
-          const response = await apiClient.get(`/api/quizzes?category=${category}`);
+          const response = await apiClient.post(`/api/proxy`, {
+            endpoint: '/quizzes',
+            params: { category }
+          });
           quizzes = response.data.data;
           setCache('/api/quizzes', category, quizzes);
         }
@@ -484,7 +483,10 @@ const ChatBot = () => {
         setMode('knowledge');
         let knowledge_list = getFromCache('/api/knowledge', category);
         if (!knowledge_list) {
-          const response = await apiClient.get(`/api/knowledge?category=${category}`);
+          const response = await apiClient.post(`/api/proxy`, {
+            endpoint: '/knowledge',
+            params: { category }
+          });
           knowledge_list = response.data.data;
           setCache('/api/knowledge', category, knowledge_list);
         }
@@ -512,7 +514,10 @@ const ChatBot = () => {
       if (selectedType === 'quiz') {
         let quizzes = getFromCache('/api/quizzes', currentCategory);
         if (!quizzes) {
-          const response = await apiClient.get(`/api/quizzes?category=${currentCategory}`);
+          const response = await apiClient.post(`/api/proxy`, {
+            endpoint: '/quizzes',
+            params: { category: currentCategory }
+          });
           quizzes = response.data.data;
           setCache('/api/quizzes', currentCategory, quizzes);
         }
@@ -523,7 +528,10 @@ const ChatBot = () => {
       } else if (selectedType === 'knowledge') {
         let knowledge_list = getFromCache('/api/knowledge', currentCategory);
         if (!knowledge_list) {
-          const response = await apiClient.get(`/api/knowledge?category=${currentCategory}`);
+          const response = await apiClient.post(`/api/proxy`, {
+            endpoint: '/knowledge',
+            params: { category: currentCategory }
+          });
           knowledge_list = response.data.data;
           setCache('/api/knowledge', currentCategory, knowledge_list);
         }
@@ -603,7 +611,8 @@ const ChatBot = () => {
       try {
         let knowledge_list = getFromCache('/api/knowledge', detectedCategory);
         if (!knowledge_list) {
-          const response = await apiClient.get(`/api/knowledge`, {
+          const response = await apiClient.post(`/api/proxy`, {
+            endpoint: '/knowledge',
             params: { category: detectedCategory }
           });
           knowledge_list = response.data.data;
@@ -667,11 +676,14 @@ const ChatBot = () => {
 
           try {
             // バックエンドに位置情報を送信
-            const response = await apiClient.post(`/api/shelters/nearby`, {
-              latitude,
-              longitude,
-              max_distance: 5,  // 5km以内
-              limit: 10  // 最大10件
+            const response = await apiClient.post(`/api/proxy`, {
+              endpoint: '/shelters',
+              params: {
+                latitude,
+                longitude,
+                max_distance: 5,
+                limit: 10
+              }
             });
 
             // 緊急避難所のみをフィルタリング
@@ -820,7 +832,10 @@ const ChatBot = () => {
       setLoading(true);
       let tips = getFromCache('/api/police-tips', 'all');
       if (!tips) {
-        const response = await apiClient.get(`/api/police-tips`);
+        const response = await apiClient.post(`/api/proxy`, {
+          endpoint: '/police-tips',
+          params: {}
+        });
         tips = response.data.data;
         setCache('/api/police-tips', 'all', tips);
       }
@@ -866,11 +881,14 @@ const ChatBot = () => {
 
     try {
       // 本来のエンドポイントに送信（quiz_idを文字列に変換）
-      const response = await apiClient.post(`/api/quiz-answer`, {
-        session_id: sessionId,
-        quiz_id: String(currentQuiz.id),
-        user_answer: selectedAnswer,
-        category: currentQuiz.category
+      const response = await apiClient.post(`/api/proxy`, {
+        endpoint: '/quiz-answer',
+        params: {
+          session_id: sessionId,
+          quiz_id: String(currentQuiz.id),
+          user_answer: selectedAnswer,
+          category: currentQuiz.category
+        }
       });
 
       const { is_correct, message } = response.data;

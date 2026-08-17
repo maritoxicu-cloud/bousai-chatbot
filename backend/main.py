@@ -439,6 +439,82 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
+# プロキシエンドポイント（API キー隠蔽）
+@app.post("/api/proxy")
+async def proxy(request: Request):
+    """
+    フロントエンドからのリクエストをプロキシ
+    バックエンド内で API キーを管理して Supabase にアクセス
+    """
+    try:
+        body = await request.json()
+        endpoint = body.get("endpoint")
+        params = body.get("params", {})
+
+        if endpoint == "/quizzes":
+            category = params.get("category")
+            difficulty = params.get("difficulty")
+
+            valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'その他']
+            valid_difficulties = ['easy', 'medium', 'hard']
+
+            if category and category not in valid_categories:
+                raise HTTPException(status_code=400, detail=f"無効なカテゴリです: {category}")
+            if difficulty and difficulty not in valid_difficulties:
+                raise HTTPException(status_code=400, detail=f"無効な難易度です: {difficulty}")
+
+            query = supabase.table("quizzes").select("*")
+            if category:
+                query = query.eq("category", category)
+            if difficulty:
+                query = query.eq("difficulty", difficulty)
+            data = query.execute()
+            return {"data": data.data}
+
+        elif endpoint == "/knowledge":
+            category = params.get("category")
+
+            if category:
+                valid_categories = ['地震', '洪水', '台風', '火災', '火山', '備蓄', 'ペット防災', 'その他']
+                if category not in valid_categories:
+                    raise HTTPException(status_code=400, detail=f"無効なカテゴリです: {category}")
+
+            query = supabase.table("knowledge").select("*")
+            if category:
+                query = query.eq("category", category)
+            data = query.execute()
+            return {"data": data.data}
+
+        elif endpoint == "/shelters":
+            query = supabase.table("shelters").select("*")
+            data = query.execute()
+            return {"data": data.data}
+
+        elif endpoint == "/police-tips":
+            category = params.get("category")
+            valid_categories = ['防災', '救助', '危機管理', '避難所', '避難訓練', '救命法', 'ペット防災', 'その他']
+
+            if category and category not in valid_categories:
+                raise HTTPException(status_code=400, detail=f"不正なカテゴリです: {category}")
+
+            query = supabase.table("bousai_lab").select("*")
+            if category:
+                query = query.eq("category", category)
+            query = query.order("order", desc=False)
+            data = query.execute()
+            return {"data": data.data}
+
+        else:
+            raise HTTPException(status_code=400, detail="不正なエンドポイント")
+
+    except Exception as e:
+        if DEBUG_MODE:
+            logger.error(f"Proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"プロキシエラー: {str(e)}")
+        else:
+            logger.error(f"Proxy error: {str(e)}")
+            raise HTTPException(status_code=500, detail="エラーが発生しました")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
