@@ -9,7 +9,7 @@ import './ChatBot.css';
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:8001'
   : 'https://bousai-chatbot-production.up.railway.app';
-const API_KEY = 'bousai-api-key-prod-2024';
+const API_KEY = process.env.REACT_APP_API_KEY;
 
 // Axios インスタンス（認証ヘッダー付き）
 const apiClient = axios.create({
