@@ -504,6 +504,21 @@ async def proxy(request: Request):
             data = query.execute()
             return {"data": data.data}
 
+        elif endpoint == "/quiz-answer":
+            session_id = params.get("session_id")
+            quiz_id = params.get("quiz_id")
+            user_answer = params.get("user_answer")
+            category = params.get("category")
+
+            quiz_answer_request = QuizAnswerRequest(
+                session_id=session_id,
+                quiz_id=quiz_id,
+                user_answer=user_answer,
+                category=category
+            )
+
+            return await submit_quiz_answer(quiz_answer_request)
+
         else:
             raise HTTPException(status_code=400, detail="不正なエンドポイント")
 
