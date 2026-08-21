@@ -445,7 +445,12 @@ async def log_access(request: Request, endpoint: str):
     """ユーザーのアクセスを logs テーブルに記録（バックグラウンド）"""
     try:
         logger.info(f"[IP Logging] Starting for endpoint: {endpoint}")
-        client_ip = request.client.host if request.client else "unknown"
+        # ユーザーの真の IP を取得（X-Forwarded-For ヘッダーを優先）
+        client_ip = request.headers.get("X-Forwarded-For", "")
+        if client_ip:
+            client_ip = client_ip.split(",")[0].strip()
+        else:
+            client_ip = request.client.host if request.client else "unknown"
         logger.info(f"[IP Logging] Client IP: {client_ip}")
 
         # 日本時刻（JST）を取得
