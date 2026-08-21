@@ -1150,6 +1150,12 @@ const ChatBot = () => {
       </form>
 
       <footer className="credits">
+        <div className="affiliate-banner" style={{ textAlign: 'center', margin: '10px 0' }}>
+          <a href="//af.moshimo.com/af/c/click?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" rel="nofollow" referrerpolicy="no-referrer-when-downgrade" attributionsrc>
+            <img src="//image.moshimo.com/af-img/6494/000000084946.jpg" width="728" height="90" style={{border:'none', maxWidth:'100%', height:'auto'}} alt="もしもアフィリエイト" />
+          </a>
+          <img src="//i.moshimo.com/af/i/impression?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" width="1" height="1" style={{border:'none'}} loading="lazy" alt="" />
+        </div>
         <p>
           <strong>クイズ・防災知識の参考引用元：</strong><br />
           内閣府（防災担当）、総務省消防庁、東京消防庁、気象庁、環境省、農林水産省、厚生労働省、東京都、警視庁、空飛ぶ捜索医療団"ARROWS"、Yahoo!天気・災害、ALSOK
