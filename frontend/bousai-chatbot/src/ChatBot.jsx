@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -1155,6 +1156,7 @@ const ChatBot = () => {
           内閣府（防災担当）、総務省消防庁、東京消防庁、気象庁、環境省、農林水産省、厚生労働省、東京都、警視庁、空飛ぶ捜索医療団"ARROWS"、Yahoo!天気・災害、ALSOK
         </p>
       </footer>
+      <Analytics />
     </div>
   );
 };
