@@ -446,6 +446,7 @@ async def proxy(request: Request):
     フロントエンドからのリクエストをプロキシ
     バックエンド内で API キーを管理して Supabase にアクセス
     """
+    endpoint = None
     try:
         body = await request.json()
         endpoint = body.get("endpoint")
@@ -539,6 +540,54 @@ async def proxy(request: Request):
         else:
             logger.error(f"Proxy error: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
+    finally:
+        if endpoint:
+            asyncio.create_task(log_access(request, endpoint))
+
+async def log_access(request: Request, endpoint: str):
+    """ユーザーのアクセスを logs テーブルに記録（バックグラウンド）"""
+    try:
+        logger.info(f"[IP Logging] Starting for endpoint: {endpoint}")
+        client_ip = request.headers.get("X-Forwarded-For", "")
+        if client_ip:
+            client_ip = client_ip.split(",")[0].strip()
+        else:
+            client_ip = request.client.host if request.client else "unknown"
+        logger.info(f"[IP Logging] Client IP: {client_ip}")
+
+        jst = timezone(timedelta(hours=9))
+        timestamp = datetime.now(jst)
+
+        logger.info(f"[IP Logging] Fetching geolocation from ip-api.com")
+        country = region = city = ''
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f'http://ip-api.com/json/{client_ip}', timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    logger.info(f"[IP Logging] ip-api.com response: {resp.status}")
+                    if resp.status == 200:
+                        geo_data = await resp.json()
+                        country = geo_data.get('country', '')
+                        region = geo_data.get('regionName', '')
+                        city = geo_data.get('city', '')
+                        logger.info(f"[IP Logging] Geo data: {country}, {region}, {city}")
+                    else:
+                        logger.error(f"[IP Logging] ip-api.com error: HTTP {resp.status}")
+        except Exception as e:
+            logger.error(f"[IP Logging] aiohttp error: {str(e)}")
+
+        logger.info(f"[IP Logging] Inserting to Supabase")
+        supabase.table("logs").insert({
+            "ip_address": client_ip,
+            "endpoint": endpoint,
+            "country": country,
+            "region": region,
+            "city": city,
+            "timestamp": timestamp.isoformat()
+        }).execute()
+        logger.info(f"[IP Logging] Success!")
+    except Exception as e:
+        logger.error(f"[IP Logging] FATAL: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
