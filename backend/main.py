@@ -457,21 +457,21 @@ async def log_access(request: Request, endpoint: str):
         jst = timezone(timedelta(hours=9))
         timestamp = datetime.now(jst)
 
-        logger.info(f"[IP Logging] Fetching geolocation from ipapi.co")
+        logger.info(f"[IP Logging] Fetching geolocation from ip-api.com")
         country = region = city = ''
 
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f'https://ipapi.co/{client_ip}/json/', timeout=aiohttp.ClientTimeout(total=5)) as resp:
-                    logger.info(f"[IP Logging] ipapi.co response: {resp.status}")
+                async with session.get(f'http://ip-api.com/json/{client_ip}', timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    logger.info(f"[IP Logging] ip-api.com response: {resp.status}")
                     if resp.status == 200:
                         geo_data = await resp.json()
-                        country = geo_data.get('country_name', '')
-                        region = geo_data.get('region', '')
+                        country = geo_data.get('country', '')
+                        region = geo_data.get('regionName', '')
                         city = geo_data.get('city', '')
                         logger.info(f"[IP Logging] Geo data: {country}, {region}, {city}")
                     else:
-                        logger.error(f"[IP Logging] ipapi.co error: HTTP {resp.status}")
+                        logger.error(f"[IP Logging] ip-api.com error: HTTP {resp.status}")
         except Exception as e:
             logger.error(f"[IP Logging] aiohttp error: {str(e)}")
 

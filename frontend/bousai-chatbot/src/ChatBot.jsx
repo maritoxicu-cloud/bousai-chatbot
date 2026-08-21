@@ -16,7 +16,18 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL
 });
 
+const BANNER_ARRAY = [
+  '<a href="//af.moshimo.com/af/c/click?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" rel="nofollow" referrerpolicy="no-referrer-when-downgrade" attributionsrc><img src="//image.moshimo.com/af-img/6494/000000084946.jpg" width="728" height="90" style="border:none;"></a><img src="//i.moshimo.com/af/i/impression?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" width="1" height="1" style="border:none;" loading="lazy">',
+  '<a href="//af.moshimo.com/af/c/click?a_id=5765667&p_id=4412&pc_id=11419&pl_id=60612" rel="nofollow" referrerpolicy="no-referrer-when-downgrade" attributionsrc><img src="//image.moshimo.com/af-img/4017/000000060612.png" width="640" height="100" style="border:none;"></a><img src="//i.moshimo.com/af/i/impression?a_id=5765667&p_id=4412&pc_id=11419&pl_id=60612" width="1" height="1" style="border:none;" loading="lazy">',
+  '<a href="//af.moshimo.com/af/c/click?a_id=5765391&amp;p_id=54&amp;pc_id=54&amp;pl_id=616&amp;url=https%3A%2F%2Fitem.rakuten.co.jp%2Flazo%2Fdp-toilet%2F&amp;m=http%3A%2F%2Fm.rakuten.co.jp%2Flazo%2Fi%2F10000269%2F" rel="nofollow" referrerpolicy="no-referrer-when-downgrade"><img src="//thumbnail.image.rakuten.co.jp/@0_mall/lazo/cabinet/11020203/dpto2601/dpto-re02.jpg?_ex=64x64" alt="" style="border: none;" /><br>防災用簡易トイレ FUTURE FOX 【防災士推奨】 災害用 防災トイレ ポータブルトイレ コンパクト 耐荷重150kg トイレキット付属 携帯トイレ 災害用トイレ</a><img src="//i.moshimo.com/af/i/impression?a_id=5765391&amp;p_id=54&amp;pc_id=54&amp;pl_id=616" alt="" loading="lazy" width="1" height="1" style="border: 0px;">'
+];
+
 const ChatBot = () => {
+  const [randomBannerIndex, setRandomBannerIndex] = useState(0);
+
+  useEffect(() => {
+    setRandomBannerIndex(Math.floor(Math.random() * BANNER_ARRAY.length));
+  }, []);
   // Force rebuild: 2026-08-04 v3.0 FINAL
   const [messages, setMessages] = useState([
     { id: 1, text: 'こんにちは！防災について何でも聞いてね。クイズ、知識、避難所の検索ができるよ。', sender: 'bot' }
@@ -1151,12 +1162,18 @@ const ChatBot = () => {
       </form>
 
       <footer className="credits">
+<<<<<<< HEAD
         <div className="affiliate-banner" style={{ textAlign: 'center', margin: '10px 0' }}>
           <a href="//af.moshimo.com/af/c/click?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" rel="nofollow" referrerpolicy="no-referrer-when-downgrade" attributionsrc>
             <img src="//image.moshimo.com/af-img/6494/000000084946.jpg" width="728" height="90" style={{border:'none', maxWidth:'100%', height:'auto'}} alt="もしもアフィリエイト" />
           </a>
           <img src="//i.moshimo.com/af/i/impression?a_id=5765392&p_id=6643&pc_id=18934&pl_id=84946" width="1" height="1" style={{border:'none'}} loading="lazy" alt="" />
         </div>
+=======
+        <div className="affiliate-banner" style={{ textAlign: 'center', margin: '10px 0', overflow: 'hidden', maxWidth: '100%' }}>
+          <div dangerouslySetInnerHTML={{ __html: BANNER_ARRAY[randomBannerIndex] }} />
+        </div>  
+>>>>>>> staging
         <p>
           <strong>クイズ・防災知識の参考引用元：</strong><br />
           内閣府（防災担当）、総務省消防庁、東京消防庁、気象庁、環境省、農林水産省、厚生労働省、東京都、警視庁、空飛ぶ捜索医療団"ARROWS"、Yahoo!天気・災害、ALSOK
