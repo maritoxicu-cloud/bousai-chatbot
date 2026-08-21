@@ -13,7 +13,9 @@ import re
 import logging
 from math import radians, cos, sin, asin, sqrt
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+import asyncio
+import aiohttp
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -439,6 +441,48 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             logger.error(f"Exception: {str(e)}")
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
+async def log_access(request: Request, endpoint: str):
+    """ユーザーのアクセスを logs テーブルに記録（バックグラウンド）"""
+    try:
+        logger.info(f"[IP Logging] Starting for endpoint: {endpoint}")
+        client_ip = request.client.host if request.client else "unknown"
+        logger.info(f"[IP Logging] Client IP: {client_ip}")
+
+        # 日本時刻（JST）を取得
+        jst = timezone(timedelta(hours=9))
+        timestamp = datetime.now(jst)
+
+        logger.info(f"[IP Logging] Fetching geolocation from ipapi.co")
+        country = region = city = ''
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f'https://ipapi.co/{client_ip}/json/', timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    logger.info(f"[IP Logging] ipapi.co response: {resp.status}")
+                    if resp.status == 200:
+                        geo_data = await resp.json()
+                        country = geo_data.get('country_name', '')
+                        region = geo_data.get('region', '')
+                        city = geo_data.get('city', '')
+                        logger.info(f"[IP Logging] Geo data: {country}, {region}, {city}")
+                    else:
+                        logger.error(f"[IP Logging] ipapi.co error: HTTP {resp.status}")
+        except Exception as e:
+            logger.error(f"[IP Logging] aiohttp error: {str(e)}")
+
+        logger.info(f"[IP Logging] Inserting to Supabase")
+        supabase.table("logs").insert({
+            "ip_address": client_ip,
+            "endpoint": endpoint,
+            "country": country,
+            "region": region,
+            "city": city,
+            "timestamp": timestamp.isoformat()
+        }).execute()
+        logger.info(f"[IP Logging] Success!")
+    except Exception as e:
+        logger.error(f"[IP Logging] FATAL: {str(e)}")
+
 # プロキシエンドポイント（API キー隠蔽）
 @app.post("/api/proxy")
 async def proxy(request: Request):
@@ -450,6 +494,9 @@ async def proxy(request: Request):
         body = await request.json()
         endpoint = body.get("endpoint")
         params = body.get("params", {})
+
+        # バックグラウンドで IP ロギングを実行
+        asyncio.create_task(log_access(request, endpoint))
 
         if endpoint == "/quizzes":
             category = params.get("category")
