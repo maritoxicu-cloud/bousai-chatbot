@@ -345,7 +345,7 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 async def get_nearby_shelters(request: NearbySheltersRequest):
     try:
         # 緊急避難所データを取得
-        response = supabase.table("shelters").select("*").execute()
+        response = supabase.table("shelters").select("id, \"施設・場所名\", 住所, 緯度, 経度, 地震, 津波, 洪水, 高潮, \"崖崩れ、土石流及び地滑り\", \"大規模な火事\", \"火山現象\", ペット対応").execute()
         shelters = response.data
 
         shelters_with_distance = []
@@ -377,7 +377,7 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
             while True:
                 start = page * 1000
                 end = start + 1000
-                response_designated = supabase.table("shelters_指定").select("*").order("id", desc=False).range(start, end).execute()
+                response_designated = supabase.table("shelters_指定").select("id, \"施設・場所名\", 住所, 緯度, 経度, 受入対象者").order("id", desc=False).range(start, end).execute()
                 page_count = len(response_designated.data) if response_designated.data else 0
                 if DEBUG_MODE:
                     logger.debug(f"ページ {page}: id {start}～{end} から {page_count} 件取得")
