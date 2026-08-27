@@ -8,6 +8,7 @@ from pydantic import BaseModel, ValidationError, Field
 import os
 from dotenv import load_dotenv
 from typing import Optional, List
+from functools import lru_cache
 import json
 import re
 import logging
@@ -327,6 +328,31 @@ async def get_user_scores(session_id: str = Path(..., min_length=1, max_length=1
         else:
             raise HTTPException(status_code=500, detail="エラーが発生しました")
 
+# キャッシュ関数：緊急避難所全件取得
+@lru_cache(maxsize=1)
+def get_all_shelters_cached():
+    """緊急避難所全件をメモリキャッシュ"""
+    response = supabase.table("shelters").select("id, \"施設・場所名\", 住所, 緯度, 経度, 地震, 津波, 洪水, 高潮, \"崖崩れ、土石流及び地滑り\", \"大規模な火事\", \"火山現象\", ペット対応").execute()
+    return response.data if response.data else []
+
+# キャッシュ関数：指定避難所全件取得
+@lru_cache(maxsize=1)
+def get_all_designated_shelters_cached():
+    """指定避難所全件をメモリキャッシュ"""
+    shelters_designated = []
+    page = 0
+    while True:
+        start = page * 1000
+        end = start + 1000
+        response = supabase.table("shelters_指定").select("id, \"施設・場所名\", 住所, 緯度, 経度, 受入対象者").order("id", desc=False).range(start, end).execute()
+        if not response.data:
+            break
+        shelters_designated.extend(response.data)
+        if len(response.data) < 1000:
+            break
+        page += 1
+    return shelters_designated
+
 # 距離計算（Haversine formula）
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """
@@ -344,9 +370,8 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 @app.post("/api/shelters/nearby")
 async def get_nearby_shelters(request: NearbySheltersRequest):
     try:
-        # 緊急避難所データを取得
-        response = supabase.table("shelters").select("id, \"施設・場所名\", 住所, 緯度, 経度, 地震, 津波, 洪水, 高潮, \"崖崩れ、土石流及び地滑り\", \"大規模な火事\", \"火山現象\", ペット対応").execute()
-        shelters = response.data
+        # 緊急避難所データを取得（キャッシュ）
+        shelters = get_all_shelters_cached()
 
         shelters_with_distance = []
 
@@ -371,22 +396,8 @@ async def get_nearby_shelters(request: NearbySheltersRequest):
         if not shelters_with_distance:
             if DEBUG_MODE:
                 logger.debug("緊急避難所が見つかりませんでした。指定避難所を検索します。")
-            # 指定避難所を全件取得（id順でページネーション、1000件制限を回避）
-            shelters_designated = []
-            page = 0
-            while True:
-                start = page * 1000
-                end = start + 1000
-                response_designated = supabase.table("shelters_指定").select("id, \"施設・場所名\", 住所, 緯度, 経度, 受入対象者").order("id", desc=False).range(start, end).execute()
-                page_count = len(response_designated.data) if response_designated.data else 0
-                if DEBUG_MODE:
-                    logger.debug(f"ページ {page}: id {start}～{end} から {page_count} 件取得")
-                if not response_designated.data:
-                    break
-                shelters_designated.extend(response_designated.data)
-                if len(response_designated.data) < 1000:
-                    break
-                page += 1
+            # 指定避難所を全件取得（キャッシュ）
+            shelters_designated = get_all_designated_shelters_cached()
 
             if DEBUG_MODE:
                 logger.debug(f"指定避難所合計データ数: {len(shelters_designated) if shelters_designated else 0}")
