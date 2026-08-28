@@ -698,6 +698,8 @@ rt {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .affiliate-banner img {
@@ -705,4 +707,5 @@ rt {
   height: auto !important;
   display: block;
   width: auto !important;
+  max-height: 65px;
 }
