@@ -1163,8 +1163,8 @@ const ChatBot = () => {
       </form>
 
       <footer className="credits">
-        <div className="affiliate-banner" style={{ textAlign: 'center', margin: '10px 0', overflow: 'hidden', maxWidth: '100%' }}>
-          <div dangerouslySetInnerHTML={{ __html: BANNER_ARRAY[randomBannerIndex] }} />
+        <div className="affiliate-banner" style={{ textAlign: 'center', margin: '10px 0', maxWidth: '100%' }}>
+          <div style={{ maxWidth: '100%', height: 'auto' }} dangerouslySetInnerHTML={{ __html: BANNER_ARRAY[randomBannerIndex] }} />
         </div>
         <p>
           <strong>クイズ・防災知識の参考引用元：</strong><br />

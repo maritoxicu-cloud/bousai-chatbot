@@ -682,3 +682,27 @@ rt {
     transform: translateY(0);
   }
 }
+
+/* Affiliate banner responsive */
+.affiliate-banner {
+  text-align: center;
+  margin: 10px 0;
+  overflow: visible;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.affiliate-banner a {
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.affiliate-banner img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+  width: auto !important;
+}
