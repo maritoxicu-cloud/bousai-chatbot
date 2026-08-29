@@ -960,7 +960,7 @@ const ChatBot = () => {
         handleQuizSelect();
       } else if (userInput.includes('地震') || userInput.includes('洪水') || userInput.includes('水害') ||
                  userInput.includes('台風') || userInput.includes('火災') || userInput.includes('火山') ||
-                 userInput.includes('備蓄') || userInput.includes('ペット')) {
+                 userInput.includes('噴火') || userInput.includes('備蓄') || userInput.includes('ペット')) {
         await handleKnowledgeByKeyword(userInput);
       } else if (userInput.includes('知識') || userInput.includes('防災知識')) {
         handleKnowledgeSelect();
@@ -969,11 +969,7 @@ const ChatBot = () => {
       } else if (userInput.includes('便利技') || userInput.includes('便利')) {
         await handlePoliceTipsSelect();
       } else {
-        setMessages(prev => [...prev, {
-          id: uuidv4(),
-          text: 'クイズ、防災知識、避難所検索、便利技のいずれかを選んでください！',
-          sender: 'bot'
-        }]);
+        handleKnowledgeSelect();
       }
     } catch (error) {
       console.error('Error:', error);
