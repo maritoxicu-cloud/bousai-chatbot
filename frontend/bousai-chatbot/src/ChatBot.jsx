@@ -633,12 +633,9 @@ const ChatBot = () => {
         }
 
         if (knowledge_list && knowledge_list.length > 0) {
-          setCurrentKnowledge(knowledge_list);
-          setMessages(prev => [...prev, {
-            id: uuidv4(),
-            text: `「${detectedCategory}」についての知識を表示します！`,
-            sender: 'bot'
-          }]);
+          const randomKnowledge = knowledge_list[Math.floor(Math.random() * knowledge_list.length)];
+          setCurrentKnowledge(randomKnowledge);
+          displayKnowledge(randomKnowledge);
         } else {
           setMessages(prev => [...prev, {
             id: uuidv4(),
