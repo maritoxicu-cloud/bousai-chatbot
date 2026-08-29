@@ -968,6 +968,22 @@ const ChatBot = () => {
         await handleShelterSelect();
       } else if (userInput.includes('便利技') || userInput.includes('便利')) {
         await handlePoliceTipsSelect();
+      } else if (userInput.includes('アプリ')) {
+        setMode('main');
+        setShowNavigation(false);
+        setMessages(prev => [...prev, {
+          id: uuidv4(),
+          text: 'このアプリは防災士が作りました☺',
+          sender: 'bot'
+        }]);
+      } else if (userInput.includes('おすすめ')) {
+        setMode('main');
+        setShowNavigation(false);
+        setMessages(prev => [...prev, {
+          id: uuidv4(),
+          text: '防災士イチオシ！FutureFoxの簡易トイレ✨',
+          sender: 'bot'
+        }]);
       } else {
         handleKnowledgeSelect();
       }
